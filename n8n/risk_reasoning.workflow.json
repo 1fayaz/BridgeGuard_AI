@@ -1,0 +1,89 @@
+{
+  "name": "BridgeGuard — Risk Reasoning Assessment (glue only)",
+  "meta": {
+    "purpose": "Fire when the Structural Analysis Agent finishes a processing cycle for a bridge, then invoke the Risk Reasoning Agent service entrypoint (R1002) with that {bridge_id, cycle_id}. One assessment per bridge per SA cycle (FR-3a). GLUE ONLY — contains NO scoring/reasoning/judgment logic (Constitution III: modularity; n8n moves data, the Python service decides). [n8n/Supabase live verification deferred — none locally.]",
+    "invokes": "src/agents/risk_reasoning/service.py :: run_assessment (exposed over HTTP by the Risk deployment) — one call per bridge, per SA cycle",
+    "scoring_logic": "none — every part of the risk judgment lives in the Python service (R1002), never here; n8n only forwards the scope and routes on the structured ok flag",
+    "upstream": "Structural Analysis Agent cycle-complete signal (SA posts {bridge_id, cycle_id} to this webhook when its analysis_results for the cycle are persisted)"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sa-cycle-complete",
+        "options": {}
+      },
+      "id": "sa-complete-trigger",
+      "name": "SA Cycle Complete",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "notes": "Fires when the Structural Analysis Agent finishes a cycle for one bridge and posts {bridge_id, cycle_id, bridge_type}. No inspection of analysis contents here — the scope is forwarded as-is."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.RISK_SERVICE_URL }}/assess",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ { \"bridge_id\": $json.bridge_id, \"cycle_id\": $json.cycle_id, \"bridge_type\": $json.bridge_type } }}",
+        "options": {
+          "retry": { "maxTries": 3, "waitBetweenTries": 2000 },
+          "timeout": 30000
+        }
+      },
+      "id": "invoke-service",
+      "name": "Invoke Risk Reasoning Agent (R1002)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [520, 300],
+      "notes": "POST the {bridge_id, cycle_id, bridge_type} scope to the Python service entrypoint. Retries the TRIGGER/invoke up to 3x on transport failure (Constitution IV: reliability). Redelivery is safe — the service is idempotent per scope (FR-3a: supersede, not duplicate). The service returns a structured AssessmentSummary; n8n does not interpret the verdict it carries."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            { "value1": "={{ $json.ok }}", "value2": true }
+          ]
+        }
+      },
+      "id": "check-ok",
+      "name": "Assessment Accepted?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [800, 300],
+      "notes": "Branch on the service's structured ok flag only — NEVER on the verdict the service returns. Any routing on the verdict itself (e.g. handing a to-be-reviewed verdict to the Alert Agent) is downstream and out of scope for this glue workflow."
+    },
+    {
+      "parameters": {
+        "content": "Assessment invocation failed at the service boundary (ok=false). Log + alert ops. The error detail is in {{ $json.error }}. No retry here — the HTTP node already retried transport; an ok=false is a structured result, not a transport fault."
+      },
+      "id": "on-failure",
+      "name": "Log Invocation Failure",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1080, 420]
+    },
+    {
+      "parameters": {
+        "content": "Assessment accepted and persisted by the service (risk_assessments + decision_log + trace). Nothing further for n8n to do here; downstream routing is a separate workflow."
+      },
+      "id": "on-success",
+      "name": "Assessment Accepted",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1080, 180]
+    }
+  ],
+  "connections": {
+    "SA Cycle Complete": { "main": [[{ "node": "Invoke Risk Reasoning Agent (R1002)", "type": "main", "index": 0 }]] },
+    "Invoke Risk Reasoning Agent (R1002)": { "main": [[{ "node": "Assessment Accepted?", "type": "main", "index": 0 }]] },
+    "Assessment Accepted?": {
+      "main": [
+        [{ "node": "Assessment Accepted", "type": "main", "index": 0 }],
+        [{ "node": "Log Invocation Failure", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {}
+}

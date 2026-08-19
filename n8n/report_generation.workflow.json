@@ -1,0 +1,91 @@
+{
+  "name": "BridgeGuard — Report Generation (glue only)",
+  "meta": {
+    "purpose": "Fire when the Risk Reasoning Agent finishes an assessment for a bridge, then invoke the Report Generation service entrypoint (G901) with that {bridge_id, cycle_id} scope. One document per finalized assessment. GLUE ONLY — contains NO document-building or judgment logic (Constitution III: modularity; n8n moves data, the Python service builds the document).  [n8n/Neon live verification deferred — none locally.]",
+    "invokes": "src/agents/report_generation/service.py :: run_report (exposed over HTTP by the report deployment) — one call per finalized assessment, per bridge",
+    "assembly_logic": "none — every part of building the document lives in the Python service (G901), never here; n8n only forwards the scope and routes on the structured ok flag",
+    "mode": "fire-and-notify (async) — the document build may take 5-30s, so this workflow does not block for it; the service runs the job and the completion signal is a separate downstream notification, not held open by n8n",
+    "upstream": "Risk Reasoning Agent assessment-available signal (Risk posts {bridge_id, cycle_id} to this webhook when its assessment for the bridge is persisted)",
+    "out_of_scope": "no distribution/submission of the document happens here — that is a separate downstream gated agent (FR-13); this workflow only kicks off document generation"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "risk-assessment-available",
+        "options": {}
+      },
+      "id": "risk-available-trigger",
+      "name": "Risk Assessment Available",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "notes": "Fires when the Risk Reasoning Agent finishes an assessment for one bridge and posts {bridge_id, cycle_id}. No inspection of the assessment contents here — the scope is forwarded as-is."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.REPORT_SERVICE_URL }}/report",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ { \"bridge_id\": $json.bridge_id, \"cycle_id\": $json.cycle_id } }}",
+        "options": {
+          "retry": { "maxTries": 3, "waitBetweenTries": 2000 },
+          "timeout": 10000
+        }
+      },
+      "id": "invoke-service",
+      "name": "Invoke Report Generation (G901)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [520, 300],
+      "notes": "POST the {bridge_id, cycle_id} scope to the Python service entrypoint, which enqueues the job and returns quickly (fire-and-notify — n8n does not wait the full 5-30s). Retries the TRIGGER/invoke up to 3x on transport failure (Constitution IV: reliability). Redelivery is safe — the service is idempotent per assessment version (FR-10: supersede, not duplicate). The service returns a structured summary; n8n does not interpret its contents."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            { "value1": "={{ $json.ok }}", "value2": true }
+          ]
+        }
+      },
+      "id": "check-ok",
+      "name": "Job Accepted?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [800, 300],
+      "notes": "Branch on the service's structured ok flag only — NEVER on the document's contents. Any routing on the outcome itself is downstream and out of scope for this glue workflow."
+    },
+    {
+      "parameters": {
+        "content": "Job invocation failed at the service boundary (ok=false). Log + alert ops. The error detail is in {{ $json.error }}. No retry here — the HTTP node already retried transport; an ok=false is a structured result, not a transport fault."
+      },
+      "id": "on-failure",
+      "name": "Log Invocation Failure",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1080, 420]
+    },
+    {
+      "parameters": {
+        "content": "Job accepted by the service (report_artifacts + decision_log will be written on completion). Nothing further for n8n to do here; the completion signal and any downstream distribution are separate workflows."
+      },
+      "id": "on-success",
+      "name": "Job Accepted",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1080, 180]
+    }
+  ],
+  "connections": {
+    "Risk Assessment Available": { "main": [[{ "node": "Invoke Report Generation (G901)", "type": "main", "index": 0 }]] },
+    "Invoke Report Generation (G901)": { "main": [[{ "node": "Job Accepted?", "type": "main", "index": 0 }]] },
+    "Job Accepted?": {
+      "main": [
+        [{ "node": "Job Accepted", "type": "main", "index": 0 }],
+        [{ "node": "Log Invocation Failure", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {}
+}

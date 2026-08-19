@@ -1,0 +1,126 @@
+{
+  "name": "BridgeGuard — Alert & Escalation (glue only)",
+  "meta": {
+    "purpose": "Fire when the Risk Reasoning Agent finishes an assessment for a bridge, then invoke the Alert & Escalation service entrypoint (A901) with that {bridge_id, cycle_id} scope. One alert run per finalized assessment. GLUE ONLY — contains NO alert decision or judgment logic: no recipient routing, no approval gate, no message check, no send/escalate ladder (Constitution III: modularity; n8n moves data, the Python service makes every decision and owns the single human-approval chokepoint).  [n8n/Neon live verification deferred — none locally.]",
+    "invokes": "src/agents/alert_escalation/service.py :: run_alert (exposed over HTTP by the alert deployment) — one call per finalized assessment, per bridge",
+    "decision_logic": "none — every decision (which recipients, which channel, whether a human must approve, whether to withhold, when to close/escalate) lives in the Python service (A901), never here; n8n only forwards the scope and routes on the structured ok flag",
+    "mode": "fire-and-notify (async) — a gated alert may wait on a human approval or a delivery/ack that takes minutes, so this workflow does not block for it; the service enqueues the run and completion/close is reconciled via separate callbacks, not held open by n8n",
+    "upstream": "Risk Reasoning Agent assessment-available signal (Risk posts {bridge_id, cycle_id} to this webhook when its assessment for the bridge is persisted)",
+    "callbacks": "provider delivery receipts and human acknowledgements arrive on a separate callback webhook and are forwarded to the service to advance delivery_state (out-of-band reconciliation) — transport only, no interpretation here",
+    "chokepoint": "the alert service is the system's SINGLE real-world-action chokepoint (Principle I); this glue adds NO un-gated dispatch path of its own — it only invokes the gated service and never sends a notification itself",
+    "out_of_scope": "no notification is composed or sent here, and no approval is granted here — the gated Python service owns all of that (FR-5); this workflow only kicks off the run and forwards reconciliation callbacks"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "risk-assessment-available",
+        "options": {}
+      },
+      "id": "risk-available-trigger",
+      "name": "Risk Assessment Available",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "notes": "Fires when the Risk Reasoning Agent finishes an assessment for one bridge and posts {bridge_id, cycle_id}. No inspection of the assessment contents here — the scope is forwarded as-is."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ALERT_SERVICE_URL }}/alert",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ { \"bridge_id\": $json.bridge_id, \"cycle_id\": $json.cycle_id } }}",
+        "options": {
+          "retry": { "maxTries": 3, "waitBetweenTries": 2000 },
+          "timeout": 10000
+        }
+      },
+      "id": "invoke-service",
+      "name": "Invoke Alert & Escalation (A901)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [520, 300],
+      "notes": "POST the {bridge_id, cycle_id} scope to the Python service entrypoint, which enqueues the run and returns quickly (fire-and-notify — n8n does not wait for a human approval or a delivery/ack). Retries the TRIGGER/invoke up to 3x on transport failure (Constitution IV: reliability). Redelivery is safe — the service is idempotent per assessment version (FR-10: supersede, not duplicate). The service returns a structured summary; n8n does not interpret its contents."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            { "value1": "={{ $json.ok }}", "value2": true }
+          ]
+        }
+      },
+      "id": "check-ok",
+      "name": "Run Accepted?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [800, 300],
+      "notes": "Branch on the service's structured ok flag ONLY — never on the resolved tier, the delivery/escalation state, or the outcome contents. Any routing on those internals is the service's job, not this glue workflow's."
+    },
+    {
+      "parameters": {
+        "content": "Run invocation failed at the service boundary (ok=false). Log + alert ops. The error detail is in {{ $json.error }}. No retry here — the HTTP node already retried transport; an ok=false is a structured result, not a transport fault."
+      },
+      "id": "on-failure",
+      "name": "Log Invocation Failure",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1080, 420]
+    },
+    {
+      "parameters": {
+        "content": "Run accepted by the service (alert_dispatches + decision_log are written by the service). Nothing further for n8n to do here; a gated run may still be awaiting a human approval, and delivery/ack reconciliation arrives on the separate callback webhook below."
+      },
+      "id": "on-success",
+      "name": "Run Accepted",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1080, 180]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "alert-delivery-callback",
+        "options": {}
+      },
+      "id": "delivery-callback-trigger",
+      "name": "Delivery / Ack Callback",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 560],
+      "notes": "Provider delivery receipts and human acknowledgements land here (out-of-band) and are forwarded to the service to advance delivery_state. Transport only — n8n does not decide anything about the reconciliation."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ALERT_SERVICE_URL }}/alert/reconcile",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ { \"provider_message_id\": $json.provider_message_id, \"delivery_state\": $json.delivery_state } }}",
+        "options": {
+          "retry": { "maxTries": 3, "waitBetweenTries": 2000 },
+          "timeout": 10000
+        }
+      },
+      "id": "forward-callback",
+      "name": "Forward Reconciliation (A901)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [520, 560],
+      "notes": "Forward the receipt/ack to the service, which advances the row's delivery_state and re-resolves the escalation close. n8n forwards the callback payload as-is; the state transition is validated by the service's delivery state machine (A702), never here."
+    }
+  ],
+  "connections": {
+    "Risk Assessment Available": { "main": [[{ "node": "Invoke Alert & Escalation (A901)", "type": "main", "index": 0 }]] },
+    "Invoke Alert & Escalation (A901)": { "main": [[{ "node": "Run Accepted?", "type": "main", "index": 0 }]] },
+    "Run Accepted?": {
+      "main": [
+        [{ "node": "Run Accepted", "type": "main", "index": 0 }],
+        [{ "node": "Log Invocation Failure", "type": "main", "index": 0 }]
+      ]
+    },
+    "Delivery / Ack Callback": { "main": [[{ "node": "Forward Reconciliation (A901)", "type": "main", "index": 0 }]] }
+  },
+  "settings": {}
+}

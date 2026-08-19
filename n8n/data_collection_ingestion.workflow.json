@@ -1,0 +1,100 @@
+{
+  "name": "BridgeGuard — Data Collection Ingestion (glue only)",
+  "meta": {
+    "purpose": "Subscribe to sensor MQTT, batch one processing cycle, invoke the Data Collection Agent service entrypoint (T1001). GLUE ONLY — contains NO validation logic (Constitution III: modularity; n8n moves data, the Python service decides). [DB/MQTT live verification deferred — no broker locally.]",
+    "invokes": "src/agents/data_collection/service.py :: run_cycle (exposed over HTTP by T1001 deployment)",
+    "validation_logic": "none — all liveness/range/spike/gap/pending/late-arrival/clock-drift/dedup logic lives in the Python service, never here"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "topics": "bridgeguard/+/sensors/#",
+        "options": { "qos": 1 }
+      },
+      "id": "mqtt-trigger",
+      "name": "MQTT Trigger (Mosquitto)",
+      "type": "n8n-nodes-base.mqttTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "notes": "Subscribe to the sensor topic. One message = one raw reading payload. No parsing/validation here — the raw JSON is forwarded as-is."
+    },
+    {
+      "parameters": {
+        "batchSize": 0,
+        "options": { "batchInterval": 5000 }
+      },
+      "id": "batch-cycle",
+      "name": "Batch Per Cycle",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [520, 300],
+      "notes": "Collect messages arriving within one processing window into a single batch array. Time-window batching only — no inspection of payload contents."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DCA_SERVICE_URL }}/run-cycle",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ { \"batch\": $json.data } }}",
+        "options": {
+          "retry": { "maxTries": 3, "waitBetweenTries": 2000 },
+          "timeout": 30000
+        }
+      },
+      "id": "invoke-service",
+      "name": "Invoke Data Collection Agent (T1001)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 300],
+      "notes": "POST the batch to the Python service entrypoint. Retries the TRIGGER/invoke up to 3x on transport failure (Constitution IV: reliability). The service returns a structured CycleSummary; n8n does not interpret it beyond logging."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            { "value1": "={{ $json.ok }}", "value2": true }
+          ]
+        }
+      },
+      "id": "check-ok",
+      "name": "Cycle OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1080, 300],
+      "notes": "Branch on the service's structured ok flag only — NOT on any per-sensor verdict. Routing/alerting on verdicts is downstream, out of scope for this glue workflow."
+    },
+    {
+      "parameters": {
+        "content": "Cycle failed at the service boundary (ok=false). Log + alert ops. The malformed/error detail is in {{ $json.error }}. No retry here — the HTTP node already retried transport; an ok=false is a structured result, not a transport fault."
+      },
+      "id": "on-failure",
+      "name": "Log Cycle Failure",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1360, 420]
+    },
+    {
+      "parameters": {
+        "content": "Cycle accepted. Verdicts are already persisted by the service (validated_readings + sensor_status + decision_log). Nothing further for n8n to do."
+      },
+      "id": "on-success",
+      "name": "Cycle Accepted",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1360, 180]
+    }
+  ],
+  "connections": {
+    "MQTT Trigger (Mosquitto)": { "main": [[{ "node": "Batch Per Cycle", "type": "main", "index": 0 }]] },
+    "Batch Per Cycle": { "main": [[{ "node": "Invoke Data Collection Agent (T1001)", "type": "main", "index": 0 }]] },
+    "Invoke Data Collection Agent (T1001)": { "main": [[{ "node": "Cycle OK?", "type": "main", "index": 0 }]] },
+    "Cycle OK?": {
+      "main": [
+        [{ "node": "Cycle Accepted", "type": "main", "index": 0 }],
+        [{ "node": "Log Cycle Failure", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {}
+}

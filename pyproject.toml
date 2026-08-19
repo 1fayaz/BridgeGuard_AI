@@ -1,0 +1,25 @@
+[project]
+name = "bridgeguard"
+version = "0.1.0"
+description = "BridgeGuard — AI-powered IoT bridge infrastructure health monitoring"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.7.0",
+    "asyncpg>=0.30.0",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "httpx>=0.28.0",
+    "reportlab>=4.2.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
+asyncio_mode = "auto"
+
+[tool.setuptools.packages.find]
+where = ["src"]
