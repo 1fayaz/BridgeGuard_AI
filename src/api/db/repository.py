@@ -17,7 +17,7 @@ change *this* file, which is exactly the review the design wants to force.
 """
 from __future__ import annotations
 
-from api.db.scope import ScopedConnection
+from .scope import ScopedConnection
 
 
 class Repository:

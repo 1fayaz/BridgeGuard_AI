@@ -35,9 +35,9 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Final, Mapping
 
-from api.db.repository import Repository
-from api.schemas.common import PageParams
-from api.schemas.null_honest import NullHonestModel
+from ..db.repository import Repository
+from ..schemas.common import PageParams
+from ..schemas.null_honest import NullHonestModel
 
 # The LATERAL is what makes this "current state" rather than "history": for each bridge, the
 # single most recent assessment that has not been superseded. `superseded_by IS NULL` is the

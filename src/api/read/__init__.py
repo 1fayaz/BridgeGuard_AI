@@ -6,3 +6,17 @@ thresholds, no aggregates, no interpolation, no liveness guesses. A number that 
 screen from here can be traced back to the row it came from (INV-6), because there is nowhere
 in this package it could have been invented instead.
 """
+
+from .bridges import (
+    BridgeOverview,
+    BridgeOverviewRepository,
+    OVERVIEW_SQL,
+    project_overview,
+)
+
+__all__ = [
+    "BridgeOverview",
+    "BridgeOverviewRepository",
+    "OVERVIEW_SQL",
+    "project_overview",
+]

@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncpg
 from typing import Final
 
-from api.settings import get_settings
+from ..settings import get_settings
 
 # Demo tenant — the seeded Lahore municipality.
 DEMO_MUNICIPALITY_ID: Final = "municipality-lahore"

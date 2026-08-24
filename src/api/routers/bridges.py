@@ -8,15 +8,15 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Annotated
 
-from api.db.pool import run_scoped, init_pool, close_pool
-from api.db.repository import Repository
-from api.read.bridges import (
+from ..db.pool import run_scoped, init_pool, close_pool
+from ..db.repository import Repository
+from ..read.bridges import (
     BridgeOverview,
     BridgeOverviewRepository,
     OVERVIEW_SQL,
     project_overview,
 )
-from api.schemas.common import PageParams
+from ..schemas.common import PageParams
 
 
 router = APIRouter(prefix="/v1", tags=["bridges"])

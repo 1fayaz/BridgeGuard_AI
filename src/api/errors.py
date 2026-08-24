@@ -24,8 +24,8 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from api.schemas.errors import ErrorResponse
-from api.status_policy import ApiError, Failure
+from .schemas.errors import ErrorResponse
+from .status_policy import ApiError, Failure
 
 logger = logging.getLogger("bridgeguard.api")
 
