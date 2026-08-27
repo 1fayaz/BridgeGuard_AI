@@ -21,9 +21,9 @@ def run_migrations():
             sql = f.read()
         try:
             cur.execute(sql)
-            print(f"  ✓ {name}")
+            print(f"  [OK] {name}")
         except Exception as e:
-            print(f"  ✗ {name}: {e}")
+            print(f"  [FAIL] {name}: {e}")
             raise
 
     cur.close()

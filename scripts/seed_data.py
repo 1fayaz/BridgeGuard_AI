@@ -18,15 +18,15 @@ VALUES
    'Thokar Niaz Baig Bridge', 'Lahore, Punjab', NOW())
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO sensors (id, bridge_id, sensor_type, config, created_at)
+INSERT INTO sensors (id, bridge_id, municipality_id, sensor_type, config, created_at)
 VALUES
-  ('acc-ravi-01', 'bridge-ravi-01', 'accelerometer',
+  ('acc-ravi-01', 'bridge-ravi-01', 'municipality-lahore', 'accelerometer',
    '{"expected_interval_s": 10}', NOW()),
-  ('acc-data-01', 'bridge-data-01', 'accelerometer',
+  ('acc-data-01', 'bridge-data-01', 'municipality-lahore', 'accelerometer',
    '{"expected_interval_s": 10}', NOW()),
-  ('acc-mall-01', 'bridge-mall-01', 'accelerometer',
+  ('acc-mall-01', 'bridge-mall-01', 'municipality-lahore', 'accelerometer',
    '{"expected_interval_s": 10}', NOW()),
-  ('acc-thokar-01', 'bridge-thokar-01', 'accelerometer',
+  ('acc-thokar-01', 'bridge-thokar-01', 'municipality-lahore', 'accelerometer',
    '{"expected_interval_s": 10}', NOW())
 ON CONFLICT (id) DO NOTHING;
 """

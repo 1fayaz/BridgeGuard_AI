@@ -4,31 +4,27 @@ Last updated: 2026-08-19
 ## Deployment Stack
 | Layer      | Platform | URL                                      | Cost         |
 |------------|----------|------------------------------------------|--------------|
-| Backend    | Render   | https://bridgeguard-api.onrender.com     | Free forever |
+| Backend    | Vercel   | https://bridgeguard.vercel.app/api       | Free forever |
 | Database   | Neon     | [your neon project URL]                  | Free forever |
 | Frontend   | Vercel   | https://bridgeguard.vercel.app           | Free forever |
 | Uptime     | UptimeRobot | pings /v1/health every 5 min          | Free forever |
 
-## NO Railway — removed completely on 2026-08-19
+## NO Railway, NO Render — Vercel-only stack (2026-08-24)
 
 ## Project Status
 - Agents 1-5:        COMPLETE (1480+ tests, 0 failures)
-- Database layer:    COMPLETE (migrations 0001-0016)
+- Database layer:    COMPLETE (migrations 0001-0018, RLS policies active)
 - API layer:         IN PROGRESS (715 tests, phases 1-5 done)
-- Frontend:          IN PROGRESS (scaffold complete)
-- Deployment:        COMPLETE (Render + Neon + Vercel)
+- Frontend:          IN PROGRESS (Screen 1 - Bridge Overview complete)
+- Deployment:        VERCEL-READY (Neon DB seeded, migrations done)
 
 ## Environment Variables Required
-### Render (backend)
-- DATABASE_URL      → Neon connection string
-- SECRET_KEY        → random 32-char hex string
-- APP_ENV           → production
-- R2_*              → Cloudflare R2 (post-hackathon)
-- RATE_LIMIT_*      → TODO (post-hackathon)
-
-### Vercel (frontend)
-- NEXT_PUBLIC_API_URL   → Render URL
-- NEXT_PUBLIC_DEMO_TOKEN → demo JWT (hackathon only)
+### Vercel (both frontend + backend via api/index.py)
+- DATABASE_URL            → Neon connection string
+- SECRET_KEY              → random 32-char hex string
+- APP_ENV                 → production
+- NEXT_PUBLIC_API_URL     → "" (relative URLs on Vercel)
+- NEXT_PUBLIC_DEMO_TOKEN  → demo JWT (hackathon only)
 
 ## Seed Data
 Municipality: City of Lahore (id: municipality-lahore)
