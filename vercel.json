@@ -1,22 +1,5 @@
 {
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/.next",
-  "installCommand": "cd frontend && npm install",
-  "functions": {
-    "api/index.py": {
-      "maxDuration": 10
-    }
-  },
-  "routes": [
-    {
-      "src": "/v1/(.*)",
-      "dest": "api/index.py"
-    },
-    {
-      "src": "/(bridges|reports)(.*)"
-    },
-    {
-      "src": "/(.*)"
-    }
-  ]
+  "installCommand": "cd frontend && npm install"
 }
