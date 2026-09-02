@@ -20,7 +20,7 @@ Last updated: 2026-09-02
   - Mock Sindh bridge data with Recharts time-series visualization
   - Client-side report generation (TXT + HTML/PDF)
   - Commit: `132a0877`
-- Deployment:        PUSHED to GitHub; deploy via Vercel dashboard with Root Directory = `frontend`
+- Deployment:        PUSHED to GitHub; root `vercel.json` removed to avoid framework-detection conflicts. Deploy via Vercel dashboard with Root Directory = `frontend`.
 
 ## Environment Variables Required
 ### Vercel (frontend only — Root Directory: frontend)
