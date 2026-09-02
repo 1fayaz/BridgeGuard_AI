@@ -1,42 +1,26 @@
-"use client";
-
-import { useParams } from "next/navigation";
 import Link from "next/link";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { BRIDGES, SEVERITY_CONFIG, generateReadings } from "@/lib/data";
+import { notFound } from "next/navigation";
+import { BRIDGES, SEVERITY_CONFIG } from "@/lib/data";
+import BridgeChart from "./chart";
 
-export default function BridgeDetailPage() {
-  const params = useParams();
-  const id = params.id as string;
-  const bridge = BRIDGES.find((b) => b.id === id);
+export function generateStaticParams() {
+  return BRIDGES.map((bridge) => ({ id: bridge.id }));
+}
+
+export const dynamicParams = false;
+
+export default function BridgeDetailPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const bridge = BRIDGES.find((b) => b.id === params.id);
 
   if (!bridge) {
-    return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center">
-        <h1 className="text-xl font-semibold text-red-800">Bridge not found</h1>
-        <p className="mt-2 text-red-700">
-          No bridge matches <code>{id}</code>.
-        </p>
-        <Link
-          href="/"
-          className="mt-4 inline-block text-sm font-medium text-red-800 underline"
-        >
-          Back to overview
-        </Link>
-      </div>
-    );
+    notFound();
   }
 
   const cfg = SEVERITY_CONFIG[bridge.severity];
-  const readings = generateReadings(bridge.severity);
 
   return (
     <div className="space-y-8">
@@ -88,27 +72,7 @@ export default function BridgeDetailPage() {
             Sensor {bridge.sensor_id}
           </span>
         </div>
-        <div className="mt-4 h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={readings}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="time" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip
-                formatter={(value) => [`${value} mm/s²`, "RMS"]}
-                labelStyle={{ color: "#334155" }}
-              />
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke={bridge.severity === "CRITICAL" ? "#dc2626" : "#0ea5e9"}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 5 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        <BridgeChart severity={bridge.severity} />
       </div>
 
       <div className="flex gap-4">

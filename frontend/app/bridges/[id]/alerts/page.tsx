@@ -1,28 +1,20 @@
-"use client";
-
-import { useParams } from "next/navigation";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { BRIDGES, SEVERITY_CONFIG } from "@/lib/data";
 
 const severityRank = { CRITICAL: 0, WARNING: 1, WATCH: 2, SAFE: 3 };
 
-export default function AlertsPage() {
-  const params = useParams();
-  const id = params.id as string;
-  const bridge = BRIDGES.find((b) => b.id === id);
+export function generateStaticParams() {
+  return BRIDGES.map((bridge) => ({ id: bridge.id }));
+}
+
+export const dynamicParams = false;
+
+export default function AlertsPage({ params }: { params: { id: string } }) {
+  const bridge = BRIDGES.find((b) => b.id === params.id);
 
   if (!bridge) {
-    return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center">
-        <h1 className="text-xl font-semibold text-red-800">Bridge not found</h1>
-        <Link
-          href="/"
-          className="mt-4 inline-block text-sm font-medium text-red-800 underline"
-        >
-          Back to overview
-        </Link>
-      </div>
-    );
+    notFound();
   }
 
   const alerts = [...bridge.alerts].sort(
