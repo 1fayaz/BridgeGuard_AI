@@ -1,5 +1,5 @@
 # BridgeGuard AI — Project Context
-Last updated: 2026-08-19
+Last updated: 2026-09-02
 
 ## Deployment Stack
 | Layer      | Platform | URL                                      | Cost         |
@@ -15,11 +15,18 @@ Last updated: 2026-08-19
 - Agents 1-5:        COMPLETE (1480+ tests, 0 failures)
 - Database layer:    COMPLETE (migrations 0001-0018, RLS policies active)
 - API layer:         IN PROGRESS (715 tests, phases 1-5 done)
-- Frontend:          IN PROGRESS (Screen 1 - Bridge Overview complete)
-- Deployment:        VERCEL-READY (Neon DB seeded, migrations done)
+- Frontend:          COMPLETE — rebuilt from scratch 2026-09-02
+  - Overview, bridge detail, alerts, agents, and reports pages
+  - Mock Sindh bridge data with Recharts time-series visualization
+  - Client-side report generation (TXT + HTML/PDF)
+  - Commit: `132a0877`
+- Deployment:        PUSHED to GitHub; deploy via Vercel dashboard with Root Directory = `frontend`
 
 ## Environment Variables Required
-### Vercel (both frontend + backend via api/index.py)
+### Vercel (frontend only — Root Directory: frontend)
+- No runtime environment variables required for the mock-data demo build.
+
+### Vercel (backend via api/index.py at repo root)
 - DATABASE_URL            → Neon connection string
 - SECRET_KEY              → random 32-char hex string
 - APP_ENV                 → production
@@ -36,14 +43,22 @@ Bridges:
 Sensors: one accelerometer per bridge
 
 ## Hackathon Demo Flow
-1. Start simulator:  python simulator/bridge_simulator.py
-2. Press n = normal mode (green dashboard)
-3. Press d = danger mode (risk score jumps to red)
-4. Show alert fires automatically
-5. Click Generate Report → PDF downloads
-6. Total demo time: 60-90 seconds
+1. Open deployed frontend overview page.
+2. Click Thokar Niaz Baig Bridge (CRITICAL) or Mall Road Overpass (WARNING).
+3. Show risk score, AI explanation, and vibration chart.
+4. Click "View Alerts" to see severity-sorted alerts.
+5. Go to Reports → select bridge → download TXT/HTML report.
+6. Go to AI Agents to explain the 5-agent pipeline.
+7. Total demo time: 60-90 seconds.
 
 ## Key Files
+- frontend/vercel.json      → Vercel framework config for Root Directory = frontend
+- frontend/lib/data.ts      → shared mock data and severity config
+- frontend/app/page.tsx     → bridge overview
+- frontend/app/bridges/[id]/page.tsx → bridge detail with Recharts chart
+- frontend/app/bridges/[id]/alerts/page.tsx → severity-sorted alerts
+- frontend/app/agents/page.tsx → 5-agent pipeline explanation
+- frontend/app/reports/page.tsx → client-side report generator
 - render.yaml              → Render deployment config
 - scripts/run_migrations.py → runs all 16 migrations on Neon
 - scripts/seed_data.py      → inserts demo bridges and sensors
