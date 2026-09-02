@@ -24,164 +24,184 @@ export interface Bridge {
 
 export const SEVERITY_CONFIG: Record<
   Severity,
-  { label: string; color: string; bg: string; text: string }
+  {
+    label: string;
+    color: string;
+    bg: string;
+    text: string;
+    border: string;
+    ring: string;
+    icon: string;
+  }
 > = {
   SAFE: {
     label: "Safe",
     color: "bg-emerald-500",
-    bg: "bg-emerald-50",
-    text: "text-emerald-700",
+    bg: "bg-emerald-50/80",
+    text: "text-emerald-800",
+    border: "border-emerald-200",
+    ring: "ring-emerald-500/20",
+    icon: "🟢",
   },
   WATCH: {
     label: "Watch",
-    color: "bg-yellow-400",
-    bg: "bg-yellow-50",
-    text: "text-yellow-700",
+    color: "bg-amber-400",
+    bg: "bg-amber-50/80",
+    text: "text-amber-800",
+    border: "border-amber-200",
+    ring: "ring-amber-500/20",
+    icon: "🟡",
   },
   WARNING: {
     label: "Warning",
     color: "bg-orange-500",
-    bg: "bg-orange-50",
-    text: "text-orange-700",
+    bg: "bg-orange-50/80",
+    text: "text-orange-800",
+    border: "border-orange-200",
+    ring: "ring-orange-500/20",
+    icon: "🟠",
   },
   CRITICAL: {
     label: "Critical",
-    color: "bg-red-600",
-    bg: "bg-red-50",
-    text: "text-red-700",
+    color: "bg-rose-600",
+    bg: "bg-rose-50/80",
+    text: "text-rose-800",
+    border: "border-rose-200",
+    ring: "ring-rose-500/20",
+    icon: "🔴",
   },
 };
 
 export const AGENT_PIPELINE = [
   {
     name: "Ingestion Agent",
-    role: "Collects raw accelerometer & strain data from IoT edge nodes.",
+    role: "Collects raw accelerometer & strain data from IoT edge nodes along the Indus corridor.",
   },
   {
     name: "Signal Agent",
-    role: "Cleans gaps, filters noise, flags interpolated points.",
+    role: "Cleans gaps, filters noise, and flags interpolated points for full traceability.",
   },
   {
     name: "Risk Agent",
-    role: "Computes 0-100 risk score and writes a human explanation.",
+    role: "Computes the 0-100 risk score and writes a human-readable engineering explanation.",
   },
   {
     name: "Alert Agent",
-    role: "Raises WARNING/CRITICAL when thresholds are crossed.",
+    role: "Raises WATCH, WARNING, or CRITICAL alerts when thresholds are crossed.",
   },
   {
     name: "Report Agent",
-    role: "Generates downloadable PDF/TXT audit reports on demand.",
+    role: "Generates downloadable PDF/TXT audit reports for maintenance teams and regulators.",
   },
 ];
 
 export const BRIDGES: Bridge[] = [
   {
-    id: "bridge-ravi-01",
-    name: "Ravi River Bridge",
-    location: "Lahore, Punjab",
-    risk_score: 12,
+    id: "bridge-sukkur-01",
+    name: "Sukkur Barrage Bridge",
+    location: "Sukkur, Sindh",
+    risk_score: 14,
     severity: "SAFE",
     explanation:
-      "Vibration RMS is stable and within safe limits. No structural anomalies detected in the last 24h.",
+      "Vibration RMS is stable and within safe limits. No structural anomalies detected in the last 24 hours across the barrage approach spans.",
     review_status: "FINAL",
     chips: [
-      { label: "RMS 0.42", warn: false },
+      { label: "RMS 0.45", warn: false },
       { label: "No alerts", warn: false },
     ],
     alerts: [],
-    current_rms: 0.42,
-    sensor_id: "sensor-ravi-01",
+    current_rms: 0.45,
+    sensor_id: "sensor-sukkur-01",
   },
   {
-    id: "bridge-data-01",
-    name: "Data Darbar Underpass",
-    location: "Lahore, Punjab",
-    risk_score: 38,
+    id: "bridge-guddu-01",
+    name: "Guddu Barrage Bridge",
+    location: "Guddu, Sindh",
+    risk_score: 36,
     severity: "WATCH",
     explanation:
-      "Minor vibration increase during rush hour. Pattern matches traffic load, not structural degradation.",
+      "Minor vibration increase during peak river-flow hours. Pattern matches hydrological load, not structural degradation.",
     review_status: "FINAL",
     chips: [
-      { label: "RMS 1.12", warn: true },
+      { label: "RMS 1.08", warn: true },
       { label: "1 watch", warn: true },
     ],
     alerts: [
       {
-        id: "alert-data-01",
+        id: "alert-guddu-01",
         severity: "WATCH",
-        message: "Rush-hour RMS elevated above weekly baseline.",
-        time: "17:30",
+        message: "Flow-induced RMS elevated above weekly baseline.",
+        time: "14:20",
       },
     ],
-    current_rms: 1.12,
-    sensor_id: "sensor-data-01",
+    current_rms: 1.08,
+    sensor_id: "sensor-guddu-01",
   },
   {
-    id: "bridge-mall-01",
-    name: "Mall Road Overpass",
-    location: "Lahore, Punjab",
-    risk_score: 67,
+    id: "bridge-indus-hwy-01",
+    name: "Indus Highway (Hyd-Khi) Bridge",
+    location: "Near Hyderabad, Sindh",
+    risk_score: 69,
     severity: "WARNING",
     explanation:
-      "Repeated peak accelerations exceed the warning threshold. Recommend manual inspection within 48 hours.",
+      "Repeated peak accelerations exceed the warning threshold on the heavy-traffic carriageway. Recommend manual inspection within 48 hours.",
     review_status: "PENDING_HUMAN_REVIEW",
     chips: [
-      { label: "RMS 2.45", warn: true },
+      { label: "RMS 2.52", warn: true },
       { label: "3 alerts", warn: true },
     ],
     alerts: [
       {
-        id: "alert-mall-01",
+        id: "alert-indus-01",
         severity: "WARNING",
-        message: "Peak acceleration 2.8x baseline detected.",
-        time: "09:15",
+        message: "Peak acceleration 2.9x baseline detected on lane 2.",
+        time: "10:05",
       },
       {
-        id: "alert-mall-02",
+        id: "alert-indus-02",
         severity: "WARNING",
-        message: "Strain gauge delta increased 18% overnight.",
-        time: "06:40",
+        message: "Strain gauge delta increased 19% overnight.",
+        time: "06:15",
       },
       {
-        id: "alert-mall-03",
+        id: "alert-indus-03",
         severity: "WATCH",
         message: "Traffic-induced resonance detected briefly.",
-        time: "14:22",
+        time: "16:40",
       },
     ],
-    current_rms: 2.45,
-    sensor_id: "sensor-mall-01",
+    current_rms: 2.52,
+    sensor_id: "sensor-indus-hwy-01",
   },
   {
-    id: "bridge-thokar-01",
-    name: "Thokar Niaz Baig Bridge",
-    location: "Lahore, Punjab",
-    risk_score: 91,
+    id: "bridge-kotri-01",
+    name: "Kotri Barrage Bridge",
+    location: "Kotri, Sindh",
+    risk_score: 93,
     severity: "CRITICAL",
     explanation:
-      "Sustained high-amplitude vibrations and rapid strain growth. Immediate engineering review and potential traffic restriction advised.",
+      "Sustained high-amplitude vibrations and rapid strain growth on the downstream cantilever. Immediate engineering review and potential load restriction advised.",
     review_status: "PENDING_HUMAN_REVIEW",
     chips: [
-      { label: "RMS 4.71", warn: true },
+      { label: "RMS 4.85", warn: true },
       { label: "2 critical", warn: true },
     ],
     alerts: [
       {
-        id: "alert-thokar-01",
+        id: "alert-kotri-01",
         severity: "CRITICAL",
-        message: "Critical RMS sustained above 4.5 for 10 minutes.",
-        time: "08:05",
+        message: "Critical RMS sustained above 4.8 for 12 minutes.",
+        time: "08:35",
       },
       {
-        id: "alert-thokar-02",
+        id: "alert-kotri-02",
         severity: "CRITICAL",
-        message: "Maximum strain increased 34% in last 4 hours.",
-        time: "07:50",
+        message: "Maximum strain increased 36% in last 4 hours.",
+        time: "08:10",
       },
     ],
-    current_rms: 4.71,
-    sensor_id: "sensor-thokar-01",
+    current_rms: 4.85,
+    sensor_id: "sensor-kotri-01",
   },
 ];
 
