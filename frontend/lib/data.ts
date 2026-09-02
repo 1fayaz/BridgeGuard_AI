@@ -2,9 +2,10 @@ export type Severity = "SAFE" | "WATCH" | "WARNING" | "CRITICAL";
 export type ReviewStatus = "FINAL" | "PENDING_HUMAN_REVIEW";
 
 export interface Alert {
+  id: string;
   severity: Severity;
   message: string;
-  timestamp?: string;
+  time: string;
 }
 
 export interface Bridge {
@@ -17,106 +18,191 @@ export interface Bridge {
   review_status: ReviewStatus;
   chips: { label: string; warn: boolean }[];
   alerts: Alert[];
+  current_rms: number;
+  sensor_id: string;
 }
 
-export const BRIDGES: Bridge[] = [
+export const SEVERITY_CONFIG: Record<
+  Severity,
+  { label: string; color: string; bg: string; text: string }
+> = {
+  SAFE: {
+    label: "Safe",
+    color: "bg-emerald-500",
+    bg: "bg-emerald-50",
+    text: "text-emerald-700",
+  },
+  WATCH: {
+    label: "Watch",
+    color: "bg-yellow-400",
+    bg: "bg-yellow-50",
+    text: "text-yellow-700",
+  },
+  WARNING: {
+    label: "Warning",
+    color: "bg-orange-500",
+    bg: "bg-orange-50",
+    text: "text-orange-700",
+  },
+  CRITICAL: {
+    label: "Critical",
+    color: "bg-red-600",
+    bg: "bg-red-50",
+    text: "text-red-700",
+  },
+};
+
+export const AGENT_PIPELINE = [
   {
-    id: "bridge-indus-khi-hyd",
-    name: "Indus River Bridge — KHI-HYD",
-    location: "Karachi-Hyderabad Highway, Sindh",
-    risk_score: 82,
-    severity: "CRITICAL",
-    explanation:
-      "The Indus River Bridge on the KHI-HYD Highway is showing vibration levels 9 times above its normal baseline, triggered by heavy truck convoys crossing simultaneously. The steel girders are absorbing repeated stress above their design tolerance. Recent monsoon flooding has raised concerns about scour erosion around the pier foundations. Immediate engineering inspection recommended within 48 hours.",
-    review_status: "PENDING_HUMAN_REVIEW",
-    chips: [
-      { label: "Vibration ↑↑", warn: true },
-      { label: "Scour risk", warn: true },
-    ],
-    alerts: [
-      {
-        severity: "CRITICAL",
-        message:
-          "Vibration 9x above normal. Heavy truck convoy detected. Engineer sign-off required.",
-        timestamp: "Today, 09:42",
-      },
-      {
-        severity: "WARNING",
-        message: "Deflection approaching design limit L/650 vs limit L/800.",
-        timestamp: "Today, 08:15",
-      },
-    ],
+    name: "Ingestion Agent",
+    role: "Collects raw accelerometer & strain data from IoT edge nodes.",
   },
   {
-    id: "bridge-kotri-01",
-    name: "Kotri Bridge",
-    location: "Hyderabad, Sindh",
-    risk_score: 64,
-    severity: "WARNING",
-    explanation:
-      "Crack growth detected on the main girder. Rate above acceptable threshold of 0.1mm per month. Current crack width 2.3mm. Inspection within 14 days recommended.",
-    review_status: "FINAL",
-    chips: [
-      { label: "Crack +0.3mm", warn: true },
-      { label: "Vibration OK", warn: false },
-    ],
-    alerts: [
-      {
-        severity: "WARNING",
-        message:
-          "Crack growth rate above acceptable threshold. Inspection within 14 days.",
-        timestamp: "Yesterday, 16:20",
-      },
-    ],
+    name: "Signal Agent",
+    role: "Cleans gaps, filters noise, flags interpolated points.",
   },
   {
-    id: "bridge-sukkur-01",
-    name: "Sukkur Barrage Bridge",
-    location: "Sukkur, Sindh",
-    risk_score: 41,
-    severity: "WATCH",
-    explanation:
-      "Gradual vibration increase over 30-day trend. Still within design limits. Monitor closely.",
-    review_status: "FINAL",
-    chips: [
-      { label: "Traffic ↑", warn: false },
-      { label: "Sensors OK", warn: false },
-    ],
-    alerts: [],
+    name: "Risk Agent",
+    role: "Computes 0-100 risk score and writes a human explanation.",
   },
   {
-    id: "bridge-guddu-01",
-    name: "Guddu Barrage Bridge",
-    location: "Kashmore, Sindh",
-    risk_score: 18,
-    severity: "SAFE",
-    explanation:
-      "All readings within normal range. No structural concerns detected. Next review in 30 days.",
-    review_status: "FINAL",
-    chips: [{ label: "All sensors OK", warn: false }],
-    alerts: [],
+    name: "Alert Agent",
+    role: "Raises WARNING/CRITICAL when thresholds are crossed.",
+  },
+  {
+    name: "Report Agent",
+    role: "Generates downloadable PDF/TXT audit reports on demand.",
   },
 ];
 
-export const getBridge = (id: string) => BRIDGES.find((b) => b.id === id);
+export const BRIDGES: Bridge[] = [
+  {
+    id: "bridge-ravi-01",
+    name: "Ravi River Bridge",
+    location: "Lahore, Punjab",
+    risk_score: 12,
+    severity: "SAFE",
+    explanation:
+      "Vibration RMS is stable and within safe limits. No structural anomalies detected in the last 24h.",
+    review_status: "FINAL",
+    chips: [
+      { label: "RMS 0.42", warn: false },
+      { label: "No alerts", warn: false },
+    ],
+    alerts: [],
+    current_rms: 0.42,
+    sensor_id: "sensor-ravi-01",
+  },
+  {
+    id: "bridge-data-01",
+    name: "Data Darbar Underpass",
+    location: "Lahore, Punjab",
+    risk_score: 38,
+    severity: "WATCH",
+    explanation:
+      "Minor vibration increase during rush hour. Pattern matches traffic load, not structural degradation.",
+    review_status: "FINAL",
+    chips: [
+      { label: "RMS 1.12", warn: true },
+      { label: "1 watch", warn: true },
+    ],
+    alerts: [
+      {
+        id: "alert-data-01",
+        severity: "WATCH",
+        message: "Rush-hour RMS elevated above weekly baseline.",
+        time: "17:30",
+      },
+    ],
+    current_rms: 1.12,
+    sensor_id: "sensor-data-01",
+  },
+  {
+    id: "bridge-mall-01",
+    name: "Mall Road Overpass",
+    location: "Lahore, Punjab",
+    risk_score: 67,
+    severity: "WARNING",
+    explanation:
+      "Repeated peak accelerations exceed the warning threshold. Recommend manual inspection within 48 hours.",
+    review_status: "PENDING_HUMAN_REVIEW",
+    chips: [
+      { label: "RMS 2.45", warn: true },
+      { label: "3 alerts", warn: true },
+    ],
+    alerts: [
+      {
+        id: "alert-mall-01",
+        severity: "WARNING",
+        message: "Peak acceleration 2.8x baseline detected.",
+        time: "09:15",
+      },
+      {
+        id: "alert-mall-02",
+        severity: "WARNING",
+        message: "Strain gauge delta increased 18% overnight.",
+        time: "06:40",
+      },
+      {
+        id: "alert-mall-03",
+        severity: "WATCH",
+        message: "Traffic-induced resonance detected briefly.",
+        time: "14:22",
+      },
+    ],
+    current_rms: 2.45,
+    sensor_id: "sensor-mall-01",
+  },
+  {
+    id: "bridge-thokar-01",
+    name: "Thokar Niaz Baig Bridge",
+    location: "Lahore, Punjab",
+    risk_score: 91,
+    severity: "CRITICAL",
+    explanation:
+      "Sustained high-amplitude vibrations and rapid strain growth. Immediate engineering review and potential traffic restriction advised.",
+    review_status: "PENDING_HUMAN_REVIEW",
+    chips: [
+      { label: "RMS 4.71", warn: true },
+      { label: "2 critical", warn: true },
+    ],
+    alerts: [
+      {
+        id: "alert-thokar-01",
+        severity: "CRITICAL",
+        message: "Critical RMS sustained above 4.5 for 10 minutes.",
+        time: "08:05",
+      },
+      {
+        id: "alert-thokar-02",
+        severity: "CRITICAL",
+        message: "Maximum strain increased 34% in last 4 hours.",
+        time: "07:50",
+      },
+    ],
+    current_rms: 4.71,
+    sensor_id: "sensor-thokar-01",
+  },
+];
 
-export interface Reading {
-  time: string;
-  rms: number;
-}
-
-// Deterministic pseudo-random readings so server and client render identically.
-export function generateReadings(severity: Severity, seedKey: string): Reading[] {
-  let seed = seedKey.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) || 1;
-  const rand = () => {
-    seed = (seed * 16807) % 2147483647;
-    return seed / 2147483647;
-  };
-  return Array.from({ length: 50 }, (_, i) => ({
-    time: `${String(Math.floor(i / 6)).padStart(2, "0")}:${String((i % 6) * 10).padStart(2, "0")}`,
-    rms:
-      i > 30 && severity === "CRITICAL"
-        ? parseFloat((2.5 + rand() * 0.8).toFixed(3))
-        : parseFloat((0.3 + rand() * 0.15).toFixed(3)),
-  }));
+export function generateReadings(severity: Severity) {
+  const count = 50;
+  const base =
+    severity === "SAFE"
+      ? 0.4
+      : severity === "WATCH"
+      ? 1.1
+      : severity === "WARNING"
+      ? 2.5
+      : 4.7;
+  const points = [];
+  for (let i = 0; i < count; i++) {
+    points.push({
+      time: `${i * 5}s`,
+      value: Number(
+        (base + (Math.random() - 0.5) * base * 0.6 + Math.sin(i / 4) * 0.2).toFixed(2)
+      ),
+    });
+  }
+  return points;
 }

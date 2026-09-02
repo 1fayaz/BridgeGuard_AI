@@ -1,126 +1,130 @@
 "use client";
+
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer } from "recharts";
-import { getBridge, generateReadings } from "@/lib/data";
-
-const scoreColor: Record<string, string> = {
-  CRITICAL: "#ef4444", WARNING: "#f97316",
-  WATCH: "#eab308", SAFE: "#22c55e",
-};
-
-const badge: Record<string, { bg: string; text: string; label: string }> = {
-  CRITICAL: { bg: "#fcebeb", text: "#A32D2D", label: "🔴 Critical" },
-  WARNING:  { bg: "#FAECE7", text: "#993C1D", label: "🟠 Warning" },
-  WATCH:    { bg: "#faeeda", text: "#854F0B", label: "🟡 Watch" },
-  SAFE:     { bg: "#eaf3de", text: "#3B6D11", label: "🟢 Safe" },
-};
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { BRIDGES, SEVERITY_CONFIG, generateReadings } from "@/lib/data";
 
 export default function BridgeDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const bridge = typeof id === "string" ? getBridge(id) : undefined;
+  const params = useParams();
+  const id = params.id as string;
+  const bridge = BRIDGES.find((b) => b.id === id);
 
-  if (!bridge) return (
-    <main className="p-6 text-center">
-      <p className="text-gray-500">Bridge not found.</p>
-      <Link href="/" className="text-sm text-blue-600 mt-2 inline-block">← Back to overview</Link>
-    </main>
-  );
+  if (!bridge) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center">
+        <h1 className="text-xl font-semibold text-red-800">Bridge not found</h1>
+        <p className="mt-2 text-red-700">
+          No bridge matches <code>{id}</code>.
+        </p>
+        <Link
+          href="/"
+          className="mt-4 inline-block text-sm font-medium text-red-800 underline"
+        >
+          Back to overview
+        </Link>
+      </div>
+    );
+  }
 
-  const readings = generateReadings(bridge.severity, bridge.id);
-  const color = scoreColor[bridge.severity];
-  const bd = badge[bridge.severity];
-  const currentRms = readings[readings.length - 1].rms;
-  const alertCount = bridge.alerts.length;
+  const cfg = SEVERITY_CONFIG[bridge.severity];
+  const readings = generateReadings(bridge.severity);
 
   return (
-    <main className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
         <div>
-          <Link href="/" className="text-sm text-gray-400 hover:text-gray-600 no-underline">← All bridges</Link>
-          <h1 className="text-xl font-medium text-gray-900 mt-1">{bridge.name}</h1>
-          <p className="text-sm text-gray-500">📍 {bridge.location} · Live monitoring</p>
+          <h1 className="text-2xl font-bold text-slate-900">{bridge.name}</h1>
+          <p className="text-slate-500">{bridge.location}</p>
         </div>
-        <div className="flex gap-2 items-center">
-          <span className="text-xs font-medium px-3 py-1.5 rounded-full"
-            style={{ background: bd.bg, color: bd.text }}>{bd.label}</span>
-          <Link href={`/bridges/${bridge.id}/alerts`}
-            className="px-3 py-1.5 rounded-lg text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 no-underline">
-            View Alerts {alertCount > 0 ? `(${alertCount}) ` : ""}→
-          </Link>
-        </div>
+        <Link
+          href="/"
+          className="text-sm font-medium text-slate-600 hover:text-slate-900"
+        >
+          &larr; Back
+        </Link>
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-xl p-5 mb-4">
-        <div className="flex items-center gap-6 mb-4">
-          <div>
-            <div className="text-5xl font-medium" style={{ color }}>{bridge.risk_score}</div>
-            <div className="text-xs text-gray-400 mt-1">Risk score (0–100)</div>
-          </div>
-          <div className="flex-1">
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full rounded-full"
-                style={{ width: `${bridge.risk_score}%`, background: color }} />
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="rounded-xl border border-slate-200 bg-white p-6">
+          <p className="text-sm text-slate-500">Current Risk Score</p>
+          <p className="mt-2 text-5xl font-bold text-slate-900">
+            {bridge.risk_score}
+          </p>
+          <span
+            className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-bold uppercase ${cfg.bg} ${cfg.text}`}
+          >
+            {cfg.label}
+          </span>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white p-6 lg:col-span-2">
+          <p className="text-sm text-slate-500">AI Assessment</p>
+          <p className="mt-2 text-slate-800 leading-relaxed">
+            {bridge.explanation}
+          </p>
+          {bridge.review_status === "PENDING_HUMAN_REVIEW" && (
+            <div className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              This score is pending human engineering review.
             </div>
-            <div className="flex justify-between text-xs text-gray-400 mt-1">
-              <span>Safe</span><span>Critical</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4 rounded-xl mb-3"
-          style={{ background: "#e6f1fb", border: "0.5px solid #b5d4f4" }}>
-          <div className="text-xs font-medium mb-2" style={{ color: "#185fa5" }}>
-            🤖 AI Risk Assessment — plain language explanation
-          </div>
-          <p className="text-sm text-gray-800 leading-relaxed">{bridge.explanation}</p>
-        </div>
-
-        {bridge.review_status === "PENDING_HUMAN_REVIEW" && (
-          <div className="p-3 rounded-lg text-xs"
-            style={{ background: "#fff7ed", border: "0.5px solid #f97316", color: "#c2410c" }}>
-            ⏳ Awaiting engineer sign-off — this assessment is not final until reviewed by a qualified engineer.
-          </div>
-        )}
-      </div>
-
-      <div className="bg-white border border-gray-100 rounded-xl p-5 mb-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-medium text-gray-700">Live vibration readings — accelerometer</h2>
-          <span className="text-xs text-gray-400">Updates every 10 seconds</span>
-        </div>
-        <ResponsiveContainer width="100%" height={180}>
-          <LineChart data={readings}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0ea" />
-            <XAxis dataKey="time" tick={{ fontSize: 10 }} interval={9} />
-            <YAxis tick={{ fontSize: 10 }} unit=" m/s²" width={65} />
-            <Tooltip formatter={(v) => [`${v} m/s²`, "Vibration"]} />
-            <ReferenceLine y={0.5} stroke="#f97316" strokeDasharray="4 4"
-              label={{ value: "Normal limit", fontSize: 10, fill: "#f97316" }} />
-            <Line type="monotone" dataKey="rms" stroke="#0F6E56"
-              strokeWidth={2} dot={false} />
-          </LineChart>
-        </ResponsiveContainer>
-        <div className="flex gap-4 mt-2 text-xs text-gray-400">
-          <span>● Normal range: 0.2–0.5 m/s²</span>
-          <span style={{ color: "#f97316" }}>— Orange line: design limit</span>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white border border-gray-100 rounded-xl p-4">
-          <div className="text-xs text-gray-400 mb-1">Current vibration</div>
-          <div className="text-xl font-medium" style={{ color }}>{currentRms} m/s²</div>
+      <div className="rounded-xl border border-slate-200 bg-white p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-900">
+            Vibration Time Series
+          </h2>
+          <span className="text-sm text-slate-500">
+            Sensor {bridge.sensor_id}
+          </span>
         </div>
-        <div className="bg-white border border-gray-100 rounded-xl p-4">
-          <div className="text-xs text-gray-400 mb-1">Readings collected</div>
-          <div className="text-xl font-medium text-gray-900">50</div>
-        </div>
-        <div className="bg-white border border-gray-100 rounded-xl p-4">
-          <div className="text-xs text-gray-400 mb-1">Monitoring status</div>
-          <div className="text-sm font-medium" style={{ color: "#3B6D11" }}>● Active</div>
+        <div className="mt-4 h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={readings}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="time" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip
+                formatter={(value) => [`${value} mm/s²`, "RMS"]}
+                labelStyle={{ color: "#334155" }}
+              />
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke={bridge.severity === "CRITICAL" ? "#dc2626" : "#0ea5e9"}
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 5 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
-    </main>
+
+      <div className="flex gap-4">
+        <Link
+          href={`/bridges/${bridge.id}/alerts`}
+          className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition"
+        >
+          View Alerts ({bridge.alerts.length})
+        </Link>
+        <Link
+          href="/reports"
+          className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+        >
+          Generate Report
+        </Link>
+      </div>
+    </div>
   );
 }

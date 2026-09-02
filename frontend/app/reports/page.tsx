@@ -1,171 +1,141 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { BRIDGES, generateReadings } from "@/lib/data";
-import { generateReportPdf } from "@/lib/report";
-
-interface RecentReport {
-  id: string;
-  bridge: string;
-  kind: string;
-  date: string;
-  url?: string;
-}
-
-const MOCK_RECENT: RecentReport[] = [
-  { id: "r-3", bridge: "Kotri Bridge", kind: "Monthly structural review", date: "28 Aug 2026" },
-  { id: "r-2", bridge: "Sukkur Barrage Bridge", kind: "Routine monitoring summary", date: "20 Aug 2026" },
-  { id: "r-1", bridge: "Guddu Barrage Bridge", kind: "Routine monitoring summary", date: "12 Aug 2026" },
-];
-
-const INCLUDES = [
-  "Current risk score and severity rating",
-  "AI risk assessment written in plain language",
-  "Full alert history with timestamps",
-  "Vibration readings summary",
-  "Recommended actions with deadlines",
-];
+import { useState } from "react";
+import { BRIDGES } from "@/lib/data";
 
 export default function ReportsPage() {
-  const [bridgeId, setBridgeId] = useState(BRIDGES[0].id);
-  const [status, setStatus] = useState<"idle" | "generating" | "done">("idle");
-  const [lastReport, setLastReport] = useState<{ url: string; filename: string; kb: number } | null>(null);
-  const [recent, setRecent] = useState<RecentReport[]>(MOCK_RECENT);
+  const [selectedId, setSelectedId] = useState<string>(BRIDGES[0].id);
+  const [format, setFormat] = useState<"txt" | "pdf">("txt");
 
-  const bridge = useMemo(() => BRIDGES.find((b) => b.id === bridgeId) ?? BRIDGES[0], [bridgeId]);
+  const bridge = BRIDGES.find((b) => b.id === selectedId)!;
 
-  function onSelect(id: string) {
-    setBridgeId(id);
-    setStatus("idle");
-    setLastReport(null);
-  }
+  function downloadReport() {
+    const timestamp = new Date().toISOString();
+    const lines = [
+      `BRIDGEGUARD AI - STRUCTURAL HEALTH REPORT`,
+      `Generated: ${timestamp}`,
+      ``,
+      `Bridge:        ${bridge.name}`,
+      `Location:      ${bridge.location}`,
+      `Sensor ID:     ${bridge.sensor_id}`,
+      `Risk Score:    ${bridge.risk_score}/100`,
+      `Severity:      ${bridge.severity}`,
+      `Review Status: ${bridge.review_status}`,
+      `Current RMS:   ${bridge.current_rms} mm/s²`,
+      ``,
+      `AI Assessment`,
+      bridge.explanation,
+      ``,
+      `Active Alerts (${bridge.alerts.length})`,
+      ...bridge.alerts.map(
+        (a) => `- [${a.severity}] ${a.message} (${a.time})`
+      ),
+      ``,
+      `End of report`,
+    ];
 
-  async function generate() {
-    if (status === "generating") return;
-    setStatus("generating");
-    setLastReport(null);
-    await new Promise((r) => setTimeout(r, 1500));
-
-    const readings = generateReadings(bridge.severity, bridge.id);
-    const currentRms = readings[readings.length - 1].rms;
-    const { bytes, filename } = generateReportPdf(bridge, currentRms);
-    const blob = new Blob([bytes], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
-    setLastReport({ url, filename, kb: Math.round((bytes.length / 1024) * 10) / 10 });
-    setRecent((prev) => [
-      { id: `r-${Date.now()}`, bridge: bridge.name, kind: "Full structural report", date: "Just now", url },
-      ...prev,
-    ]);
-    setStatus("done");
+    if (format === "txt") {
+      const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${bridge.id}-report-${Date.now()}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } else {
+      const html = `
+        <html>
+          <head><title>BridgeGuard Report</title></head>
+          <body style="font-family:sans-serif; padding:40px;">
+            <h1>BridgeGuard AI Report</h1>
+            <pre style="white-space:pre-wrap; font-size:14px;">${lines
+              .join("\n")
+              .replace(/</g, "&lt;")}</pre>
+          </body>
+        </html>
+      `;
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${bridge.id}-report-${Date.now()}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   }
 
   return (
-    <main className="p-6 max-w-4xl mx-auto">
-      <div className="mb-5">
-        <h1 className="text-xl font-medium text-gray-900">Reports</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Generate a professional PDF report for any bridge — compiled by 5 AI agents in seconds.
+    <div className="max-w-2xl space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-slate-900">Generate Report</h1>
+        <p className="mt-2 text-slate-600">
+          Download an offline structural-health report for any monitored bridge.
         </p>
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-xl p-5 mb-4">
-        <h2 className="text-sm font-medium text-gray-700 mb-4">Generate a report</h2>
-        <div className="flex gap-3 items-end">
-          <label className="flex-1">
-            <span className="block text-xs text-gray-400 mb-1.5">Bridge</span>
-            <select
-              value={bridgeId}
-              onChange={(e) => onSelect(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white"
-            >
-              {BRIDGES.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name} — {b.severity}
-                </option>
-              ))}
-            </select>
+      <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
+        <div>
+          <label className="block text-sm font-medium text-slate-700">
+            Bridge
           </label>
-          <button
-            onClick={generate}
-            disabled={status === "generating"}
-            className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-60"
-            style={{ backgroundColor: "#0F6E56" }}
+          <select
+            value={selectedId}
+            onChange={(e) => setSelectedId(e.target.value)}
+            className="mt-2 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-sky-500 focus:outline-none"
           >
-            {status === "generating" ? "Generating…" : "Generate PDF Report"}
-          </button>
+            {BRIDGES.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name} — {b.location}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {status === "generating" && (
-          <div className="mt-4 flex items-center gap-3 text-sm text-gray-500">
-            <span
-              className="w-4 h-4 rounded-full border-2 border-gray-200 animate-spin shrink-0"
-              style={{ borderTopColor: "#0F6E56" }}
-            />
-            Compiling report — collecting readings, risk assessment, alerts and recommendations…
+        <div>
+          <label className="block text-sm font-medium text-slate-700">
+            Format
+          </label>
+          <div className="mt-2 flex gap-3">
+            <button
+              onClick={() => setFormat("txt")}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold border ${
+                format === "txt"
+                  ? "bg-sky-600 text-white border-sky-600"
+                  : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+              }`}
+            >
+              TXT
+            </button>
+            <button
+              onClick={() => setFormat("pdf")}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold border ${
+                format === "pdf"
+                  ? "bg-sky-600 text-white border-sky-600"
+                  : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+              }`}
+            >
+              PDF (HTML)
+            </button>
           </div>
-        )}
+        </div>
 
-        {status === "done" && lastReport && (
-          <div className="mt-4 p-4 rounded-xl" style={{ background: "#eaf3de", border: "1px solid #3B6D11" }}>
-            <div className="text-sm font-medium" style={{ color: "#3B6D11" }}>
-              Report generated — {lastReport.filename} ({lastReport.kb} KB)
-            </div>
-            <div className="text-xs mt-1" style={{ color: "#3B6D11" }}>
-              The report has been downloaded to your device.{" "}
-              <a href={lastReport.url} download={lastReport.filename} className="underline">
-                Download again
-              </a>
-            </div>
-          </div>
-        )}
-
-        <p className="text-xs text-gray-400 mt-3">
-          Reports are generated in your browser and work offline — no data leaves this device.
-        </p>
+        <button
+          onClick={downloadReport}
+          className="w-full rounded-lg bg-slate-900 px-5 py-3 text-sm font-bold text-white hover:bg-slate-800 transition"
+        >
+          Download Report
+        </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white border border-gray-100 rounded-xl p-5">
-          <h2 className="text-sm font-medium text-gray-700 mb-3">What the report includes</h2>
-          <ul className="space-y-2.5">
-            {INCLUDES.map((t) => (
-              <li key={t} className="text-xs text-gray-600 flex gap-2">
-                <span style={{ color: "#0F6E56" }}>✓</span>
-                {t}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="bg-white border border-gray-100 rounded-xl p-5">
-          <h2 className="text-sm font-medium text-gray-700 mb-3">Recent reports</h2>
-          <div className="divide-y divide-gray-50">
-            {recent.map((r) => (
-              <div key={r.id} className="py-2.5 flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="text-xs font-medium text-gray-800 truncate">{r.bridge}</div>
-                  <div className="text-xs text-gray-400">{r.kind}</div>
-                </div>
-                {r.url ? (
-                  <a href={r.url} download className="text-xs no-underline shrink-0" style={{ color: "#0F6E56" }}>
-                    Download
-                  </a>
-                ) : (
-                  <span className="text-xs text-gray-400 shrink-0">{r.date}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
+        Reports are generated client-side from mock data for this demo. In
+        production, the Report Agent produces PDFs with embedded charts and a
+        digital signature.
       </div>
-    </main>
+    </div>
   );
 }
