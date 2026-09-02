@@ -6,7 +6,7 @@ Last updated: 2026-09-02
 |------------|----------|------------------------------------------|--------------|
 | Backend    | Vercel   | https://bridgeguard.vercel.app/api       | Free forever |
 | Database   | Neon     | [your neon project URL]                  | Free forever |
-| Frontend   | Vercel   | https://bridgeguard.vercel.app           | Free forever |
+| Frontend   | Vercel   | https://bridge-guard-ai.vercel.app       | Free forever |
 | Uptime     | UptimeRobot | pings /v1/health every 5 min          | Free forever |
 
 ## NO Railway, NO Render — Vercel-only stack (2026-08-24)
@@ -21,7 +21,7 @@ Last updated: 2026-09-02
   - Client-side report generation (TXT + HTML/PDF)
   - Dynamic bridge routes converted to SSG via generateStaticParams
   - Latest commit: `3ae793e4`
-- Deployment:        PUSHED to GitHub; root `vercel.json` removed. Redeploy via Vercel dashboard with Root Directory = `frontend`.
+- Deployment:        LIVE on Vercel at https://bridge-guard-ai.vercel.app with Root Directory = `frontend`. All pages verified 200.
 
 ## Environment Variables Required
 ### Vercel (frontend only — Root Directory: frontend)
