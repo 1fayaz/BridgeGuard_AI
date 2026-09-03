@@ -10,17 +10,18 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .db.scope import close_pool, init_pool
 from .errors import register_exception_handlers
 from .routers import health, bridges
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
-    await bridges.startup()
-    yield
-    # Shutdown
-    await bridges.shutdown()
+    await init_pool()
+    try:
+        yield
+    finally:
+        await close_pool()
 
 
 def create_app() -> FastAPI:

@@ -29,7 +29,11 @@ relying on RLS to save it. RLS is defence-in-depth here, not the primary control
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Protocol
+from typing import AsyncIterator, Final, Protocol
+
+import asyncpg
+
+from ..settings import get_settings
 
 # The exact GUC read by every RLS policy in migration 0016 and 0017. One definition.
 # Changing this string silently empties the entire API. See P206.
@@ -38,6 +42,42 @@ GUC_NAME = "app.current_municipality_id"
 # Parameterized and transaction-local. The tenant id is $1 — never interpolated.
 # `is_local => true` is the set_config equivalent of SET LOCAL.
 SET_SCOPE_SQL = f"SELECT set_config('{GUC_NAME}', $1, true)"
+
+DEMO_MUNICIPALITY_ID: Final = "municipality-lahore"
+
+_pool: asyncpg.Pool | None = None
+
+
+async def init_pool() -> None:
+    global _pool
+    _pool = await asyncpg.create_pool(
+        dsn=get_settings().database_url,
+        min_size=1,
+        max_size=5,
+        command_timeout=30,
+    )
+
+
+async def close_pool() -> None:
+    global _pool
+    if _pool is not None:
+        await _pool.close()
+        _pool = None
+
+
+def _require_pool() -> asyncpg.Pool:
+    if _pool is None:
+        raise RuntimeError("database pool not initialized")
+    return _pool
+
+
+async def run_scoped(query: str, *params: object) -> list[dict[str, object]]:
+    pool = _require_pool()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            await conn.execute(SET_SCOPE_SQL, DEMO_MUNICIPALITY_ID)
+            rows = await conn.fetch(query, *params)
+    return [dict(row) for row in rows]
 
 
 class UnresolvedScopeError(Exception):

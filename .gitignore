@@ -4,6 +4,9 @@
 .env.production.local
 .env.development.local
 
+# Local project context
+/project_context.md
+
 # Python cache
 __pycache__/
 *.py[cod]
