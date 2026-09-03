@@ -32,6 +32,9 @@ export const SEVERITY_CONFIG: Record<
     border: string;
     ring: string;
     icon: string;
+    bar: string;
+    bgHex: string;
+    textHex: string;
   }
 > = {
   SAFE: {
@@ -42,6 +45,9 @@ export const SEVERITY_CONFIG: Record<
     border: "border-emerald-200",
     ring: "ring-emerald-500/20",
     icon: "🟢",
+    bar: "#10b981",
+    bgHex: "#ecfdf5",
+    textHex: "#065f46",
   },
   WATCH: {
     label: "Watch",
@@ -51,6 +57,9 @@ export const SEVERITY_CONFIG: Record<
     border: "border-amber-200",
     ring: "ring-amber-500/20",
     icon: "🟡",
+    bar: "#f59e0b",
+    bgHex: "#fffbeb",
+    textHex: "#92400e",
   },
   WARNING: {
     label: "Warning",
@@ -60,6 +69,9 @@ export const SEVERITY_CONFIG: Record<
     border: "border-orange-200",
     ring: "ring-orange-500/20",
     icon: "🟠",
+    bar: "#f97316",
+    bgHex: "#fff7ed",
+    textHex: "#9a3412",
   },
   CRITICAL: {
     label: "Critical",
@@ -69,29 +81,92 @@ export const SEVERITY_CONFIG: Record<
     border: "border-rose-200",
     ring: "ring-rose-500/20",
     icon: "🔴",
+    bar: "#e11d48",
+    bgHex: "#fff1f2",
+    textHex: "#9f1239",
   },
 };
 
 export const AGENT_PIPELINE = [
   {
+    id: 1,
     name: "Ingestion Agent",
+    icon: "📡",
+    type: "Deterministic",
+    job: "Collects raw accelerometer & strain data from IoT edge nodes",
     role: "Collects raw accelerometer & strain data from IoT edge nodes along the Indus corridor.",
+    detail:
+      "Receives 100 samples per second via LoRaWAN gateway. Validates sensor liveness, checks physical range limits, and detects statistical spikes above 3σ from the rolling baseline.",
+    checks: [
+      "Sensor liveness",
+      "Range validation",
+      "Spike detection",
+      "RMS computation",
+    ],
   },
   {
+    id: 2,
     name: "Signal Agent",
+    icon: "🔬",
+    type: "Deterministic",
+    job: "Runs FFT analysis and compares against structural baselines",
     role: "Cleans gaps, filters noise, and flags interpolated points for full traceability.",
+    detail:
+      "Performs Fast Fourier Transform to extract dominant frequencies. Compares current RMS against the 30-day rolling baseline and checks deflection ratios against IRC/AASHTO design limits.",
+    checks: [
+      "FFT frequency analysis",
+      "Baseline comparison",
+      "Deflection ratio check",
+      "Trigger evaluation",
+    ],
   },
   {
+    id: 3,
     name: "Risk Agent",
+    icon: "🧠",
+    type: "AI Model",
+    job: "Computes risk score and writes plain-language explanation",
     role: "Computes the 0-100 risk score and writes a human-readable engineering explanation.",
+    detail:
+      "Deterministic scoring formula combined with an AI-generated explanation. References IRC and AASHTO engineering standards. Provenance guardrail ensures every number is traceable to its source reading.",
+    checks: [
+      "Risk score (0–100)",
+      "Severity classification",
+      "AI explanation",
+      "Provenance guardrail",
+    ],
   },
   {
+    id: 4,
     name: "Alert Agent",
+    icon: "🚨",
+    type: "Deterministic",
+    job: "Raises alerts when thresholds are crossed and routes to engineers",
     role: "Raises WATCH, WARNING, or CRITICAL alerts when thresholds are crossed.",
+    detail:
+      "Evaluates severity band and routes notifications to the appropriate engineering team. CRITICAL alerts are blocked from auto-fire and require human approval before dispatch.",
+    checks: [
+      "Severity evaluation",
+      "Auto-fire guardrail",
+      "Alert routing",
+      "Human-in-the-loop",
+    ],
   },
   {
+    id: 5,
     name: "Report Agent",
+    icon: "📄",
+    type: "Deterministic",
+    job: "Generates downloadable PDF/TXT audit reports",
     role: "Generates downloadable PDF/TXT audit reports for maintenance teams and regulators.",
+    detail:
+      "Assembles bridge health reports with sensor data tables, risk scores, AI explanations, and maintenance recommendations. Ready for government submission or engineering review.",
+    checks: [
+      "Data table assembly",
+      "Risk score embedding",
+      "AI explanation inclusion",
+      "Report packaging",
+    ],
   },
 ];
 
