@@ -2,8 +2,18 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "BridgeGuard AI",
-  description: "AI-powered IoT bridge infrastructure health monitoring",
+  title: "BridgeGuard AI — Bridge Health Monitoring",
+  description: "AI-powered IoT bridge structural health monitoring for Sindh Province, Pakistan",
+  icons: {
+    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌉</text></svg>",
+    shortcut: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌉</text></svg>",
+    apple: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌉</text></svg>",
+  },
+  openGraph: {
+    title: "BridgeGuard AI",
+    description: "AI-powered bridge monitoring — $199/month",
+    url: "https://bridge-guard-ai.vercel.app",
+  },
 };
 
 export default function RootLayout({
