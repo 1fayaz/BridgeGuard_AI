@@ -26,8 +26,8 @@ from typing import Any, Final
 
 from pydantic import BaseModel, ConfigDict
 
-from api.ingest.reasons import RejectionReason
-from api.status_policy import ApiError, Failure
+from .reasons import RejectionReason
+from ..status_policy import ApiError, Failure
 
 # A sensor id longer than this is not a name, it is a payload. Bounded so an id cannot
 # become a memory or log-flood vector.

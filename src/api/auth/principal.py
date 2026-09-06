@@ -36,7 +36,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Sequence
 
-from api.status_policy import ApiError, Failure
+from ..status_policy import ApiError, Failure
 
 
 class CredentialClass(str, Enum):

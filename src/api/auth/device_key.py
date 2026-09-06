@@ -32,8 +32,8 @@ from __future__ import annotations
 
 from typing import Final
 
-from api.auth.principal import CredentialClass, Principal, resolve_principal
-from api.status_policy import ApiError, Failure
+from .principal import CredentialClass, Principal, resolve_principal
+from ..status_policy import ApiError, Failure
 from db.credential_store import (
     MIN_KEY_LENGTH,
     FakeCredentialStore,

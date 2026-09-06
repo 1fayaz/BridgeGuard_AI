@@ -40,11 +40,11 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict
 
-from api.audit import ingest_audit
-from api.auth.principal import Principal
-from api.ingest.batch import IngestBatch, ReadingInput, check_shape
-from api.ingest.ownership import SensorRegistry, check_ownership
-from api.ingest.reasons import RejectionReason
+from ..audit import ingest_audit
+from ..auth.principal import Principal
+from .batch import IngestBatch, ReadingInput, check_shape
+from .ownership import SensorRegistry, check_ownership
+from .reasons import RejectionReason
 
 _NO_OBJECTION: Final = None
 

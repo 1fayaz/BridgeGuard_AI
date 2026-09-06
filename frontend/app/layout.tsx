@@ -10,8 +10,8 @@ export const metadata: Metadata = {
     apple: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌉</text></svg>",
   },
   openGraph: {
-    title: "BridgeGuard AI",
-    description: "AI-powered bridge monitoring — $199/month",
+    title: "BridgeGuard AI — Protecting Pakistan's Bridges",
+    description: "AI-powered bridge monitoring. Real-time risk scores. $199/month.",
     url: "https://bridge-guard-ai.vercel.app",
   },
 };

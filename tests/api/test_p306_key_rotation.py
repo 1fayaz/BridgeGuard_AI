@@ -319,10 +319,17 @@ def test_a_rotated_key_never_resolves_into_another_tenant(store: FakeCredentialS
 
 # ------------------------------------------------------------------ structural scans ---
 def test_nothing_in_the_api_layer_updates_a_key_hash():
-    """An in-place overwrite anywhere in the boundary defeats the whole discipline."""
+    """An in-place overwrite anywhere in the boundary defeats the whole discipline.
+
+    The live ingest router stamps `device_credentials.last_used_at` after a successful
+    batch — the one UPDATE 0017 permits on this table ("the two legitimate updates").
+    The exact permitted statement is stripped before scanning, so it masks nothing: any
+    other UPDATE of device_credentials, and every key-material write, still fails.
+    """
+    permitted = "update device_credentials set last_used_at"
     offenders = []
     for path in Path("src/api").rglob("*.py"):
-        text = path.read_text(encoding="utf-8").lower()
+        text = path.read_text(encoding="utf-8").lower().replace(permitted, "")
         for banned in ("set key_hash", "key_hash =", "update device_credentials"):
             if banned in text:
                 offenders.append(f"{path}: {banned}")

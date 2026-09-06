@@ -117,10 +117,17 @@ def _executable_lines(sql_or_py: str) -> str:
 
 # ------------------------------------------------------ structural: no mutation exists ---
 def test_no_api_module_writes_an_update_or_delete_against_a_raw_table():
-    """The headline scan. A raw-table UPDATE anywhere in this layer is a Principle II breach."""
+    """The headline scan. A raw-table UPDATE anywhere in this layer is a Principle II breach.
+
+    The live ingest router stamps `device_credentials.last_used_at` after a successful
+    batch — 0017's permitted update on that table, which is not a raw table. The exact
+    statement is stripped before the verb scan, so it masks nothing: any other UPDATE
+    or DELETE text in a file that touches raw_readings still fails.
+    """
+    permitted = "update device_credentials set last_used_at"
     offenders = []
     for rel, src in _api_sources():
-        body = _executable_lines(src).lower()
+        body = _executable_lines(src).lower().replace(permitted, "")
         for table in RAW_TABLES:
             if table not in body:
                 continue

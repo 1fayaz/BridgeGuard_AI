@@ -20,6 +20,7 @@ export interface Bridge {
   alerts: Alert[];
   current_rms: number;
   sensor_id: string;
+  last_seen: string;
 }
 
 export const SEVERITY_CONFIG: Record<
@@ -186,7 +187,8 @@ export const BRIDGES: Bridge[] = [
     ],
     alerts: [],
     current_rms: 0.45,
-    sensor_id: "sensor-sukkur-01",
+    sensor_id: "acc-sukkur-01",
+    last_seen: "1 minute ago",
   },
   {
     id: "bridge-guddu-01",
@@ -210,7 +212,8 @@ export const BRIDGES: Bridge[] = [
       },
     ],
     current_rms: 1.08,
-    sensor_id: "sensor-guddu-01",
+    sensor_id: "acc-guddu-01",
+    last_seen: "3 minutes ago",
   },
   {
     id: "bridge-indus-hwy-01",
@@ -246,7 +249,8 @@ export const BRIDGES: Bridge[] = [
       },
     ],
     current_rms: 2.52,
-    sensor_id: "sensor-indus-hwy-01",
+    sensor_id: "acc-indus-hwy-01",
+    last_seen: "2 minutes ago",
   },
   {
     id: "bridge-kotri-01",
@@ -276,7 +280,8 @@ export const BRIDGES: Bridge[] = [
       },
     ],
     current_rms: 4.85,
-    sensor_id: "sensor-kotri-01",
+    sensor_id: "acc-kotri-01",
+    last_seen: "4 minutes ago",
   },
 ];
 

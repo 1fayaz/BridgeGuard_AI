@@ -18,8 +18,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from api.db.rls import visible_rows
-from api.db.scope import ScopeNotSetError
+from .rls import visible_rows
+from .scope import ScopeNotSetError
 
 GUC_HINT = (
     "no tenant scope is set on this connection; every query must run inside "

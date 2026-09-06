@@ -27,7 +27,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
 
-from db.tenant_store import FakeTenantStore, UnknownBridgeError
+from .tenant_store import FakeTenantStore, UnknownBridgeError
 
 # A device key below this length is guessable, so it is not a credential.
 MIN_KEY_LENGTH = 16

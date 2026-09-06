@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .db.scope import close_pool, init_pool
 from .errors import register_exception_handlers
-from .routers import health, bridges
+from .routers import health, bridges, ingest
 
 
 @asynccontextmanager
@@ -39,12 +39,14 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
     app.include_router(health.router)
     app.include_router(bridges.router)
+    app.include_router(ingest.router)
 
     # CORS for Vercel frontend
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[
             "https://bridgeguard.vercel.app",
+            "https://bridge-guard-ai.vercel.app",
             "http://localhost:3000",
         ],
         allow_credentials=True,

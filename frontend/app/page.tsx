@@ -1,12 +1,62 @@
 "use client";
 
 import Link from "next/link";
-import { BRIDGES, SEVERITY_CONFIG } from "@/lib/data";
+import { useEffect, useState } from "react";
+import { BRIDGES, SEVERITY_CONFIG, type Bridge, type Severity } from "@/lib/data";
+import { fetchBridges, fetchBridgeRisk } from "@/lib/api";
 
 export default function HomePage() {
-  const sorted = [...BRIDGES].sort((a, b) => b.risk_score - a.risk_score);
-  const criticalCount = BRIDGES.filter((b) => b.severity === "CRITICAL").length;
-  const warningCount = BRIDGES.filter((b) => b.severity === "WARNING").length;
+  const [bridges, setBridges] = useState<Bridge[]>(BRIDGES);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadLive() {
+      const apiBridges = await fetchBridges();
+      if (cancelled || !apiBridges) return;
+
+      const riskMap = new Map<
+        string,
+        { risk_score: number; severity: string; explanation: string }
+      >();
+      await Promise.all(
+        apiBridges.map(async (b) => {
+          const risk = await fetchBridgeRisk(b.id);
+          if (risk) {
+            riskMap.set(risk.bridge_id, {
+              risk_score: risk.risk_score,
+              severity: risk.severity,
+              explanation: risk.explanation,
+            });
+          }
+        }),
+      );
+
+      if (cancelled) return;
+
+      setBridges((prev) =>
+        prev.map((b) => {
+          const live = riskMap.get(b.id);
+          if (!live) return b;
+          return {
+            ...b,
+            risk_score: live.risk_score,
+            severity: live.severity as Severity,
+            explanation: live.explanation,
+          };
+        }),
+      );
+    }
+
+    loadLive();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const sorted = [...bridges].sort((a, b) => b.risk_score - a.risk_score);
+  const criticalCount = bridges.filter((b) => b.severity === "CRITICAL").length;
+  const warningCount = bridges.filter((b) => b.severity === "WARNING").length;
 
   return (
     <div className="space-y-12">
@@ -25,7 +75,7 @@ export default function HomePage() {
           </p>
         </div>
         <div className="relative z-10 mt-8 grid gap-4 sm:grid-cols-3">
-          <StatCard value={BRIDGES.length} label="Monitored bridges" />
+          <StatCard value={bridges.length} label="Monitored bridges" />
           <StatCard value={criticalCount} label="Critical" warn />
           <StatCard value={warningCount} label="Warning" warn />
         </div>
@@ -65,6 +115,9 @@ export default function HomePage() {
                       {bridge.name}
                     </h3>
                     <p className="text-sm text-slate-500">{bridge.location}</p>
+                    <div style={{ fontSize: "10px", color: "#9ca3af", marginTop: "2px" }}>
+                      ● Live · Last reading: {bridge.last_seen}
+                    </div>
                   </div>
                   <span
                     className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wide ${cfg.bg} ${cfg.text} ${cfg.border} ring-1 ${cfg.ring}`}

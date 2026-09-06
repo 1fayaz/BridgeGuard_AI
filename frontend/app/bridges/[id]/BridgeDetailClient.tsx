@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
-import { BRIDGES, SEVERITY_CONFIG, type Bridge } from "@/lib/data";
+import { BRIDGES, SEVERITY_CONFIG, type Bridge, type Severity } from "@/lib/data";
+import { fetchBridgeRisk, fetchReadings } from "@/lib/api";
 
 function generateReading(severity: string, index: number) {
   const now = new Date();
@@ -54,10 +55,48 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
   const [readings, setReadings] = useState<{ time: string; rms: number }[]>([]);
   const [liveCount, setLiveCount] = useState(0);
   const indexRef = useRef(40);
+  const [liveBridge, setLiveBridge] = useState(bridge);
 
   useEffect(() => {
     setReadings(generateInitialReadings(bridge.severity));
   }, [bridge.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function tryRealReadings() {
+      if (!bridge.sensor_id) return;
+      const real = await fetchReadings(bridge.id, bridge.sensor_id, 50);
+      if (cancelled || !real || real.length === 0) return;
+      const mapped = real.map((r) => ({
+        time: new Date(r.sensor_time).toLocaleTimeString("en-GB"),
+        rms: r.value,
+      }));
+      setReadings(mapped);
+      indexRef.current = mapped.length;
+    }
+
+    tryRealReadings();
+
+    async function pollRisk() {
+      const risk = await fetchBridgeRisk(bridge.id);
+      if (cancelled || !risk) return;
+      setLiveBridge((prev) => ({
+        ...prev,
+        risk_score: risk.risk_score,
+        severity: risk.severity as Severity,
+        explanation: risk.explanation,
+        review_status: risk.review_status as Bridge["review_status"],
+      }));
+    }
+
+    pollRisk();
+    const riskInterval = setInterval(pollRisk, 10_000);
+    return () => {
+      cancelled = true;
+      clearInterval(riskInterval);
+    };
+  }, [bridge.id, bridge.sensor_id]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -73,10 +112,10 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
     return () => clearInterval(interval);
   }, [bridge.id]);
 
-  const cfg = SEVERITY_CONFIG[bridge.severity];
+  const cfg = SEVERITY_CONFIG[liveBridge.severity];
   const currentRms = readings.length > 0
     ? readings[readings.length - 1].rms
-    : bridge.current_rms;
+    : liveBridge.current_rms;
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -87,10 +126,10 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
             ← All bridges
           </Link>
           <h1 className="text-xl font-semibold text-gray-900 mt-1">
-            {bridge.name}
+            {liveBridge.name}
           </h1>
           <p className="text-sm text-gray-500">
-            📍 {bridge.location}
+            📍 {liveBridge.location}
           </p>
         </div>
         <div className="flex gap-2 items-center flex-shrink-0">
@@ -98,9 +137,9 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
             style={{ background: cfg.bgHex, color: cfg.textHex }}>
             {cfg.label}
           </span>
-          <Link href={`/bridges/${bridge.id}/alerts`}
+          <Link href={`/bridges/${liveBridge.id}/alerts`}
             className="px-3 py-1.5 rounded-lg text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 no-underline">
-            View alerts {bridge.alerts.length > 0 && `(${bridge.alerts.length})`}
+            View alerts {liveBridge.alerts.length > 0 && `(${liveBridge.alerts.length})`}
           </Link>
         </div>
       </div>
@@ -110,7 +149,7 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
           <div className="text-center">
             <div className="text-5xl font-bold"
               style={{ color: cfg.bar }}>
-              {bridge.risk_score}
+              {liveBridge.risk_score}
             </div>
             <div className="text-xs text-gray-400 mt-1">Risk score</div>
             <div className="text-xs text-gray-400">out of 100</div>
@@ -122,10 +161,10 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
             </div>
             <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full rounded-full"
-                style={{ width: `${bridge.risk_score}%`, background: cfg.bar }} />
+                style={{ width: `${liveBridge.risk_score}%`, background: cfg.bar }} />
             </div>
             <div className="flex gap-2 mt-3 flex-wrap">
-              {bridge.chips.map((c) => (
+              {liveBridge.chips.map((c) => (
                 <span key={c.label}
                   className="text-xs px-2 py-0.5 rounded-md font-medium"
                   style={c.warn
@@ -145,11 +184,11 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
             🤖 AI Risk Assessment — plain language
           </div>
           <p className="text-sm text-gray-800 leading-relaxed">
-            {bridge.explanation}
+            {liveBridge.explanation}
           </p>
         </div>
 
-        {bridge.review_status === "PENDING_HUMAN_REVIEW" && (
+        {liveBridge.review_status === "PENDING_HUMAN_REVIEW" && (
           <div className="p-3 rounded-lg text-xs"
             style={{ background: "#fff7ed",
                      border: "0.5px solid #f97316",

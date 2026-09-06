@@ -31,8 +31,8 @@ from typing import Any, Final
 
 import jwt
 
-from api.auth.principal import CredentialClass, Principal, resolve_principal
-from api.status_policy import ApiError, Failure
+from .principal import CredentialClass, Principal, resolve_principal
+from ..status_policy import ApiError, Failure
 
 # The claim carrying the tenant. Pinned like the GUC name (P206): renaming it would 401
 # every real token simultaneously, so it is a constant with a test on it, not a literal

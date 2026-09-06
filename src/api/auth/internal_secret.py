@@ -32,8 +32,8 @@ import ipaddress
 import secrets
 from typing import Final, Sequence
 
-from api.auth.principal import CredentialClass, Principal, resolve_principal
-from api.status_policy import ApiError, Failure
+from .principal import CredentialClass, Principal, resolve_principal
+from ..status_policy import ApiError, Failure
 
 # Long enough that a leak is the realistic threat, not a guess.
 MIN_SECRET_LENGTH: Final = 32

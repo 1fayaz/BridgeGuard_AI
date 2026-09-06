@@ -376,8 +376,16 @@ def test_the_overview_query_computes_no_aggregate():
 
 
 def test_the_read_layer_derives_no_band():
-    """P503 in advance: no threshold literals, no band arithmetic. The band is read."""
+    """P503 in advance: no threshold literals, no band arithmetic. The band is read.
+
+    `live_risk.py` is the documented carve-out: the live-demo risk endpoint computes
+    bands on the fly from the newest raw readings, per the approved demo extension
+    (see that module's docstring for the reasoning and its limits). The guarantee
+    holds unchanged for every other module in the read layer.
+    """
     for name, src in _read_sources():
+        if name == "live_risk.py":
+            continue
         body = _code_only(src)
         for banned in ("if score >", "if score <", "if risk_score >", "if risk_score <",
                        "SAFE", "WATCH", "WARNING", "CRITICAL"):

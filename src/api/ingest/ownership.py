@@ -38,7 +38,7 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-from api.ingest.reasons import RejectionReason
+from .reasons import RejectionReason
 
 _UNIT_KEY: Final = "unit"
 

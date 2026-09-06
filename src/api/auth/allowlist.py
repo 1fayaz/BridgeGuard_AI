@@ -30,8 +30,8 @@ from __future__ import annotations
 
 from typing import Final
 
-from api.auth.principal import CredentialClass, Principal
-from api.status_policy import ApiError, Failure
+from .principal import CredentialClass, Principal
+from ..status_policy import ApiError, Failure
 
 _ENGINEER: Final = frozenset({CredentialClass.ENGINEER_JWT})
 _DEVICE: Final = frozenset({CredentialClass.DEVICE_KEY})
@@ -56,6 +56,7 @@ ENDPOINT_CREDENTIALS: Final[dict[str, frozenset[CredentialClass]]] = {
     # --- Endpoints 2-5 + reports: consumer reads. Engineers/dashboard only.
     "list_bridges": _ENGINEER,
     "get_bridge": _ENGINEER,
+    "get_bridge_risk": _ENGINEER,
     "list_readings": _ENGINEER,
     "get_assessment": _ENGINEER,
     "list_reports": _ENGINEER,
