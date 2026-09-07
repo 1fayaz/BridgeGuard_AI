@@ -271,6 +271,36 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
           </div>
         ))}
       </div>
+
+      {bridge.maintenance_log.length > 0 && (
+        <div className="bg-white border border-gray-100
+          rounded-xl p-5 mt-4 shadow-sm">
+          <h2 className="text-sm font-semibold
+            text-gray-700 mb-3">
+            📋 Maintenance History
+          </h2>
+          <div className="flex flex-col gap-3">
+            {bridge.maintenance_log.map((log, i) => (
+              <div key={i} className="flex gap-3
+                items-start pb-3 border-b border-gray-50
+                last:border-0 last:pb-0">
+                <div className="text-xs text-gray-400
+                  min-w-24 pt-0.5">{log.date}</div>
+                <div>
+                  <div className="text-xs font-medium
+                    text-gray-700">{log.inspector}</div>
+                  <div className="text-xs text-gray-600
+                    mt-0.5">{log.finding}</div>
+                  <div className="text-xs mt-1"
+                    style={{ color: "#0F6E56" }}>
+                    → {log.action}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

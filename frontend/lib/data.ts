@@ -21,6 +21,12 @@ export interface Bridge {
   current_rms: number;
   sensor_id: string;
   last_seen: string;
+  maintenance_log: {
+    date: string;
+    inspector: string;
+    finding: string;
+    action: string;
+  }[];
 }
 
 export const SEVERITY_CONFIG: Record<
@@ -189,6 +195,7 @@ export const BRIDGES: Bridge[] = [
     current_rms: 0.45,
     sensor_id: "acc-sukkur-01",
     last_seen: "1 minute ago",
+    maintenance_log: [],
   },
   {
     id: "bridge-guddu-01",
@@ -214,6 +221,7 @@ export const BRIDGES: Bridge[] = [
     current_rms: 1.08,
     sensor_id: "acc-guddu-01",
     last_seen: "3 minutes ago",
+    maintenance_log: [],
   },
   {
     id: "bridge-indus-hwy-01",
@@ -251,6 +259,20 @@ export const BRIDGES: Bridge[] = [
     current_rms: 2.52,
     sensor_id: "acc-indus-hwy-01",
     last_seen: "2 minutes ago",
+    maintenance_log: [
+      {
+        date: "12 Aug 2026",
+        inspector: "Eng. Saleem",
+        finding: "Surface cracks on east span",
+        action: "Marked for monitoring",
+      },
+      {
+        date: "15 Mar 2026",
+        inspector: "Eng. Raza",
+        finding: "Minor corrosion on pier 2",
+        action: "Anti-rust coating applied",
+      },
+    ],
   },
   {
     id: "bridge-kotri-01",
@@ -282,6 +304,14 @@ export const BRIDGES: Bridge[] = [
     current_rms: 4.85,
     sensor_id: "acc-kotri-01",
     last_seen: "4 minutes ago",
+    maintenance_log: [
+      {
+        date: "20 Jul 2026",
+        inspector: "Eng. Ahmed",
+        finding: "No visible defects",
+        action: "Routine inspection complete",
+      },
+    ],
   },
 ];
 
