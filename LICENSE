@@ -1,0 +1,77 @@
+Business Source License 1.1
+
+Parameters
+
+Licensor:             Fayaz Ali Noonari
+Licensed Work:        BridgeGuard AI
+                      The Licensed Work is (c) 2026 Fayaz Ali Noonari.
+Additional Use Grant: You may make use of the Licensed Work, provided that
+                      you do not use the Licensed Work for a Production
+                      Purpose that is a Commercial Use.
+Change Date:          2028-09-04
+Change License:       MIT License
+
+For information about the Business Source License, please visit
+https://mariadb.com/bsl11/.
+
+Terms
+
+The Licensor hereby grants you the right to copy, modify, create derivative
+works, redistribute, and make non-production use of the Licensed Work. The
+Licensor may change this License to the Change License, effective on the
+Change Date.
+
+If your use of the Licensed Work does not comply with the requirements
+currently in effect as described in this License, you must purchase a
+commercial license from the Licensor, its affiliated entities, or authorized
+resellers, or you must refrain from using the Licensed Work.
+
+All copies of the original and modified Licensed Work, and derivative works
+of the Licensed Work, are subject to this License. This License applies
+separately for each version of the Licensed Work and the Change Date may
+vary for each version of the Licensed Work released by the Licensor.
+
+You must conspicuously display this License on each original or modified
+copy of the Licensed Work. If you receive the Licensed Work in original or
+modified form from a third party, the terms and conditions set forth in
+this License apply to your use of that work.
+
+Any use of the Licensed Work in violation of this License will
+automatically terminate your rights under this License for the current and
+all other versions of the Licensed Work.
+
+This License does not grant you any right in any trademark or logo of
+Licensor or its affiliates (provided that you may use a trademark or logo
+of Licensor as expressly required by this License).
+
+TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSED WORK IS PROVIDED
+ON AN "AS IS" BASIS. LICENSOR HEREBY DISCLAIMS ALL WARRANTIES AND
+CONDITIONS, EXPRESS OR IMPLIED, INCLUDING (WITHOUT LIMITATION) WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT,
+AND TITLE.
+
+MariaDB hereby grants you permission to use this License's text to
+license your works, and to refer to it using the trademark "Business
+Source License", as long as you comply with the Business Source License
+format requirements and correctly attribute the source.
+
+-----
+
+Additional Grant Summary (plain language):
+
+You may use BridgeGuard AI for non-commercial purposes, including:
+  - Academic research and teaching
+  - Personal study and learning
+  - Non-profit evaluation and demonstration
+  - Hackathon and classroom projects
+
+Commercial use — including but not limited to selling the software,
+licensing it to others, deploying it as a service, or embedding it in a
+product offered to paying customers — requires explicit written permission
+from Fayaz Ali Noonari.
+
+On 2028-09-04, this license converts automatically to the MIT License,
+and the work will then be freely usable for any purpose.
+
+Copyright (c) 2026 Fayaz Ali Noonari. All rights reserved until the
+Change Date.
