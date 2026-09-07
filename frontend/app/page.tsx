@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BRIDGES, SEVERITY_CONFIG, type Bridge, type Severity } from "@/lib/data";
 import { fetchBridges, fetchBridgeRisk } from "@/lib/api";
+import BridgeMap from "@/components/BridgeMap";
 
 export default function HomePage() {
   const [bridges, setBridges] = useState<Bridge[]>(BRIDGES);
@@ -79,6 +80,18 @@ export default function HomePage() {
           <StatCard value={criticalCount} label="Critical" warn />
           <StatCard value={warningCount} label="Warning" warn />
         </div>
+      </section>
+
+      <section>
+        <div className="mb-4 flex items-end justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">Sindh Corridor</h2>
+            <p className="mt-1 text-slate-600">
+              Pin color reflects current AI-assessed risk severity.
+            </p>
+          </div>
+        </div>
+        <BridgeMap />
       </section>
 
       <section>
