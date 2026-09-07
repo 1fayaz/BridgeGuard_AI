@@ -10,9 +10,9 @@ root the Vercel runtime bundles. The tested reference implementation is in `src/
 this file is the demo projection that runs in production.
 
 Auth:
-- Read endpoints accept a `Bearer <DEMO_TOKEN>` header (env var, default
-  "demo-token-hackathon") — same value the frontend's `api.ts` ships with as
-  NEXT_PUBLIC_DEMO_TOKEN. For the hackathon demo this is sufficient.
+- Read endpoints accept a `Bearer <DEMO_TOKEN>` header. `DEMO_TOKEN` MUST be set
+  via env var — if missing, the server returns 500 "Server misconfigured" rather
+  than silently falling back to a guessable default (CWE-798 / CWE-1188).
 - POST /v1/ingest authenticates by `X-API-Key` against device_credentials rows (same
   salted-SHA-256 hash as the reference implementation).
 """
@@ -205,7 +205,12 @@ class IngestOutcome(BaseModel):
 async def require_demo_token(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> None:
-    expected = os.environ.get("DEMO_TOKEN", "demo-token-hackathon")
+    expected = os.environ.get("DEMO_TOKEN")
+    if not expected:
+        raise HTTPException(
+            status_code=500,
+            detail="Server misconfigured: DEMO_TOKEN not set",
+        )
     if not credentials or not credentials.credentials:
         raise HTTPException(status_code=401, detail="Missing bearer token")
     if not compare_digest(credentials.credentials, expected):
