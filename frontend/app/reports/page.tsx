@@ -158,9 +158,9 @@ export default function ReportsPage() {
         const status = parseFloat(rms) > 0.5 ? "HIGH" : "NORMAL";
         const statusColor = status === "HIGH" ? "#b91c1c" : "#065f46";
         return `<tr>
-          <td style="padding:6px 8px; border:1px solid #ccc; font-family:monospace">${timeLabel}</td>
-          <td style="padding:6px 8px; border:1px solid #ccc; font-family:monospace; text-align:right">${rms}</td>
-          <td style="padding:6px 8px; border:1px solid #ccc; color:${statusColor}; font-weight:bold">${status}</td>
+          <td style="padding:6px 8px; border:1px solid #ccc; font-family:monospace">${h(timeLabel)}</td>
+          <td style="padding:6px 8px; border:1px solid #ccc; font-family:monospace; text-align:right">${h(rms)}</td>
+          <td style="padding:6px 8px; border:1px solid #ccc; color:${statusColor}; font-weight:bold">${h(status)}</td>
         </tr>`;
       }).join("");
 
