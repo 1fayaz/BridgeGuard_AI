@@ -5,8 +5,10 @@ import { useEffect, useState } from "react";
 import { BRIDGES, SEVERITY_CONFIG, type Bridge, type Severity } from "@/lib/data";
 import { fetchBridges, fetchBridgeRisk } from "@/lib/api";
 import BridgeMap from "@/components/BridgeMap";
+import { useLang } from "@/lib/lang-context";
 
 export default function HomePage() {
+  const { t } = useLang();
   const [bridges, setBridges] = useState<Bridge[]>(BRIDGES);
 
   useEffect(() => {
@@ -65,7 +67,7 @@ export default function HomePage() {
         <div className="relative z-10 max-w-2xl">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur-sm">
             <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-            Live monitoring active
+            {t.liveMonitoring}
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight md:text-5xl">
             Sindh Bridge Infrastructure Health
@@ -76,9 +78,9 @@ export default function HomePage() {
           </p>
         </div>
         <div className="relative z-10 mt-8 grid gap-4 sm:grid-cols-3">
-          <StatCard value={bridges.length} label="Monitored bridges" />
-          <StatCard value={criticalCount} label="Critical" warn />
-          <StatCard value={warningCount} label="Warning" warn />
+          <StatCard value={bridges.length} label={t.monitoredBridges} />
+          <StatCard value={criticalCount} label={t.critical} warn />
+          <StatCard value={warningCount} label={t.warning} warn />
         </div>
       </section>
 
@@ -106,7 +108,7 @@ export default function HomePage() {
             href="/reports"
             className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-slate-800"
           >
-            Generate Report
+            {t.generateReport}
           </Link>
         </div>
 
@@ -143,7 +145,7 @@ export default function HomePage() {
                 <div className="mt-6 flex items-end justify-between">
                   <div>
                     <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
-                      Risk Score
+                      {t.riskScore}
                     </p>
                     <p className="text-4xl font-extrabold text-slate-900">
                       {bridge.risk_score}

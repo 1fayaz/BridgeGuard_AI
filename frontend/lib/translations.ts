@@ -1,0 +1,38 @@
+export const translations = {
+  en: {
+    overview: "Overview",
+    agents: "AI Agents",
+    reports: "Reports",
+    totalBridges: "Total Bridges",
+    critical: "Critical",
+    warning: "Warning",
+    safe: "Safe",
+    riskScore: "Risk Score",
+    lastReading: "Last reading",
+    viewAlerts: "View Alerts",
+    generateReport: "Generate Report",
+    aiAssessment: "AI Risk Assessment",
+    monitoredBridges: "bridges monitored",
+    liveMonitoring: "Live monitoring active",
+    awaiting: "Awaiting engineer sign-off",
+  },
+  ur: {
+    overview: "جائزہ",
+    agents: "اے آئی ایجنٹس",
+    reports: "رپورٹس",
+    totalBridges: "کل پل",
+    critical: "خطرناک",
+    warning: "انتباہ",
+    safe: "محفوظ",
+    riskScore: "خطرے کا سکور",
+    lastReading: "آخری ریڈنگ",
+    viewAlerts: "الرٹ دیکھیں",
+    generateReport: "رپورٹ بنائیں",
+    aiAssessment: "اے آئی خطرے کا تجزیہ",
+    monitoredBridges: "پل نگرانی میں",
+    liveMonitoring: "لائیو نگرانی فعال",
+    awaiting: "انجینئر کی منظوری کا انتظار",
+  },
+};
+
+export type Lang = "en" | "ur";

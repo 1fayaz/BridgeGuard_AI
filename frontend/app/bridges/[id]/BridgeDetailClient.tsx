@@ -8,6 +8,7 @@ import {
 } from "recharts";
 import { BRIDGES, SEVERITY_CONFIG, type Bridge, type Severity } from "@/lib/data";
 import { fetchBridgeRisk, fetchReadings } from "@/lib/api";
+import { useLang } from "@/lib/lang-context";
 
 function generateReading(severity: string, index: number) {
   const now = new Date();
@@ -52,6 +53,7 @@ function generateInitialReadings(severity: string) {
 }
 
 export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
+  const { t } = useLang();
   const [readings, setReadings] = useState<{ time: string; rms: number }[]>([]);
   const [liveCount, setLiveCount] = useState(0);
   const indexRef = useRef(40);
@@ -139,7 +141,7 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
           </span>
           <Link href={`/bridges/${liveBridge.id}/alerts`}
             className="px-3 py-1.5 rounded-lg text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 no-underline">
-            View alerts {liveBridge.alerts.length > 0 && `(${liveBridge.alerts.length})`}
+            {t.viewAlerts} {liveBridge.alerts.length > 0 && `(${liveBridge.alerts.length})`}
           </Link>
         </div>
       </div>
@@ -151,7 +153,7 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
               style={{ color: cfg.bar }}>
               {liveBridge.risk_score}
             </div>
-            <div className="text-xs text-gray-400 mt-1">Risk score</div>
+            <div className="text-xs text-gray-400 mt-1">{t.riskScore}</div>
             <div className="text-xs text-gray-400">out of 100</div>
           </div>
           <div className="flex-1">
@@ -181,7 +183,7 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
           style={{ background: "#e6f1fb", border: "0.5px solid #b5d4f4" }}>
           <div className="text-xs font-semibold mb-2"
             style={{ color: "#185fa5" }}>
-            🤖 AI Risk Assessment — plain language
+            🤖 {t.aiAssessment}
           </div>
           <p className="text-sm text-gray-800 leading-relaxed">
             {liveBridge.explanation}
@@ -193,7 +195,7 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
             style={{ background: "#fff7ed",
                      border: "0.5px solid #f97316",
                      color: "#c2410c" }}>
-            ⏳ <strong>Awaiting engineer sign-off</strong> — AI recommends.
+            ⏳ <strong>{t.awaiting}</strong> — AI recommends.
             Human decides. This alert cannot be cleared without
             a qualified engineer&apos;s approval.
           </div>
