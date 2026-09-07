@@ -202,6 +202,58 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
         )}
       </div>
 
+      {(() => {
+        const sorted = [...BRIDGES].sort(
+          (a, b) => a.risk_score - b.risk_score);
+        const rank = sorted.findIndex(
+          (b) => b.id === liveBridge.id) + 1;
+        const percentile = Math.round(
+          (rank / BRIDGES.length) * 100);
+        const worse = BRIDGES.filter(
+          (b) => b.risk_score > liveBridge.risk_score).length;
+        return (
+          <div className="bg-white border border-gray-100
+            rounded-xl p-5 mb-4 shadow-sm">
+            <h2 className="text-sm font-semibold
+              text-gray-700 mb-3">
+              📊 How does this bridge compare?
+            </h2>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center p-3 rounded-lg"
+                style={{ background: "#f0fdf4" }}>
+                <div className="text-2xl font-bold"
+                  style={{ color: "#0F6E56" }}>
+                  #{rank}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  of {BRIDGES.length} bridges
+                </div>
+              </div>
+              <div className="text-center p-3 rounded-lg"
+                style={{ background: "#fef9c3" }}>
+                <div className="text-2xl font-bold"
+                  style={{ color: "#854d0e" }}>
+                  {percentile}th
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  percentile risk
+                </div>
+              </div>
+              <div className="text-center p-3 rounded-lg"
+                style={{ background: "#f0f9ff" }}>
+                <div className="text-2xl font-bold"
+                  style={{ color: "#1d4ed8" }}>
+                  {worse}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  bridges worse off
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="bg-white border border-gray-100 rounded-xl p-5 mb-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-700">
