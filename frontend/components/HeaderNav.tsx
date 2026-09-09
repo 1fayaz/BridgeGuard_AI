@@ -4,7 +4,7 @@ import { useLang } from "@/lib/lang-context";
 export default function HeaderNav() {
   const { lang, t, toggleLang } = useLang();
   return (
-    <nav className="flex items-center gap-1 text-sm font-medium">
+    <nav className="header-nav flex items-center gap-1 text-sm font-medium">
       <a
         href="/"
         className="rounded-md px-4 py-2 text-slate-300 transition hover:bg-white/10 hover:text-white"

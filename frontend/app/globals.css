@@ -23,3 +23,96 @@ body {
     @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl;
   }
 }
+
+@media (max-width: 768px) {
+
+  /* Overview page */
+  .bridge-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Bridge detail page */
+  .detail-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .score-row {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .stat-cards-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .compare-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Header */
+  .header-nav {
+    gap: 2px !important;
+  }
+
+  .header-nav a,
+  .header-nav button {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+
+  /* Map */
+  .leaflet-container {
+    height: 220px !important;
+  }
+
+  /* Reports page */
+  .report-buttons {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  /* General padding */
+  main > div {
+    padding: 16px !important;
+  }
+
+  /* Chart */
+  .recharts-wrapper {
+    max-width: 100% !important;
+  }
+
+  .recharts-surface {
+    overflow: visible !important;
+  }
+}
+
+@media (max-width: 480px) {
+
+  /* Stat cards to 2x2 on small phones */
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  /* Bridge cards full width */
+  .bridge-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* Risk score smaller on very small screens */
+  .risk-score-big {
+    font-size: 36px !important;
+  }
+
+  /* Header logo text */
+  .logo-sub {
+    display: none !important;
+  }
+}

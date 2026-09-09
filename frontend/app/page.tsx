@@ -77,7 +77,7 @@ export default function HomePage() {
             Indus corridor.
           </p>
         </div>
-        <div className="relative z-10 mt-8 grid gap-4 sm:grid-cols-3">
+        <div className="stats-grid relative z-10 mt-8 grid gap-4 sm:grid-cols-3">
           <StatCard value={bridges.length} label={t.monitoredBridges} />
           <StatCard value={criticalCount} label={t.critical} warn />
           <StatCard value={warningCount} label={t.warning} warn />
@@ -112,14 +112,29 @@ export default function HomePage() {
           </Link>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="bridge-grid grid gap-6 md:grid-cols-2">
           {sorted.map((bridge) => {
             const cfg = SEVERITY_CONFIG[bridge.severity];
             return (
               <Link
                 key={bridge.id}
                 href={`/bridges/${bridge.id}`}
-                className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm card-hover"
+                className="group relative overflow-hidden shadow-sm card-hover"
+                style={{
+                  border: bridge.severity === "CRITICAL"
+                    ? "2px solid #ef4444"
+                    : bridge.severity === "WARNING"
+                    ? "1px solid #f97316"
+                    : "1px solid #e5e7eb",
+                  borderRadius: "12px",
+                  backgroundColor: bridge.severity === "CRITICAL"
+                    ? "#fff5f5"
+                    : "white",
+                  display: "block",
+                  textDecoration: "none",
+                  padding: "20px",
+                  transition: "box-shadow 0.2s ease",
+                }}
               >
                 <div
                   className={`absolute left-0 top-0 h-full w-1 ${cfg.color}`}
@@ -175,10 +190,23 @@ export default function HomePage() {
                     <span>0</span>
                     <span>100</span>
                   </div>
-                  <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200">
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "8px",
+                      borderRadius: "4px",
+                      backgroundColor: "#f0f0ea",
+                      overflow: "hidden",
+                    }}
+                  >
                     <div
-                      className={`h-full rounded-full ${cfg.color} shadow-[0_0_12px_rgba(0,0,0,0.15)]`}
-                      style={{ width: `${bridge.risk_score}%` }}
+                      style={{
+                        width: `${bridge.risk_score}%`,
+                        height: "8px",
+                        borderRadius: "4px",
+                        backgroundColor: cfg.bar,
+                        transition: "width 0.5s ease",
+                      }}
                     />
                   </div>
                 </div>

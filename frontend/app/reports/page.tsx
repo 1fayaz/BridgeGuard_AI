@@ -233,14 +233,6 @@ export default function ReportsPage() {
               margin: 18px 0 2px 0;
               color: #111;
             }
-            h1 .urdu {
-              display: block;
-              font-size: 15px;
-              color: #555;
-              font-weight: 500;
-              margin-top: 4px;
-              direction: rtl;
-            }
             .subtitle {
               text-align: center;
               font-size: 11px;
@@ -376,7 +368,7 @@ export default function ReportsPage() {
           <div class="logo-block">
             <div class="brand">
               BridgeGuard AI
-              <small>AI-Powered Structural Health Monitoring · Sindh, Pakistan</small>
+              <small>AI-Powered Bridge Structural Health Monitoring</small>
             </div>
             <div class="meta">
               Report ID: <strong>${h(reportId)}</strong><br/>
@@ -385,10 +377,7 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          <h1>
-            Bridge Health Report
-            <span class="urdu">برج گارڈ اے آئی — پل صحت رپورٹ</span>
-          </h1>
+          <h1>BridgeGuard AI — Bridge Health Report</h1>
           <div class="subtitle">
             Official Structural Assessment — Government of Sindh · Highways Department
           </div>
@@ -536,7 +525,7 @@ export default function ReportsPage() {
           {bridge.alerts.length} active alert{bridge.alerts.length !== 1 ? "s" : ""}
         </div>
 
-        <div className="flex gap-3">
+        <div className="report-buttons flex gap-3">
           <button
             onClick={downloadTxt}
             disabled={loading}

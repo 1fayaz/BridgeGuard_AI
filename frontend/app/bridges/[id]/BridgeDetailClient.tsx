@@ -121,7 +121,7 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-start justify-between mb-6">
+      <div className="detail-header flex items-start justify-between mb-6">
         <div>
           <Link href="/"
             className="text-sm text-gray-400 hover:text-gray-600 no-underline">
@@ -147,7 +147,7 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
       </div>
 
       <div className="bg-white border border-gray-100 rounded-xl p-5 mb-4 shadow-sm">
-        <div className="flex items-center gap-6 mb-5">
+        <div className="score-row flex items-center gap-6 mb-5">
           <div className="text-center">
             <div className="text-5xl font-bold"
               style={{ color: cfg.bar }}>
@@ -218,7 +218,7 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
               text-gray-700 mb-3">
               📊 How does this bridge compare?
             </h2>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="compare-grid grid grid-cols-3 gap-3">
               <div className="text-center p-3 rounded-lg"
                 style={{ background: "#f0fdf4" }}>
                 <div className="text-2xl font-bold"
@@ -276,19 +276,41 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0ea" />
             <XAxis dataKey="time" tick={{ fontSize: 9 }}
               interval={Math.floor(readings.length / 5)} />
-            <YAxis tick={{ fontSize: 10 }}
-              unit=" m/s²" width={72} />
+            <YAxis
+              tick={{ fontSize: 10 }}
+              tickFormatter={(v: number) =>
+                v.toFixed(2)}
+              unit=" m/s²"
+              width={75}
+              domain={[0, 'auto']}
+            />
             <Tooltip
-              formatter={(v) => [`${v} m/s²`, "Vibration RMS"]} />
-            <ReferenceLine y={0.5} stroke="#f97316"
+              formatter={(value) => {
+                const v = typeof value === "number" ? value : Number(value);
+                return [`${v.toFixed(3)} m/s²`, "Vibration RMS"];
+              }}
+              labelFormatter={(label) => `Time: ${label}`}
+            />
+            <ReferenceLine
+              y={0.5}
+              stroke="#f97316"
               strokeDasharray="4 4"
-              label={{ value: "Design limit",
-                       fontSize: 10, fill: "#f97316",
-                       position: "insideTopRight" }} />
-            <Line type="monotone" dataKey="rms"
-              stroke={cfg.bar} strokeWidth={2.5}
-              dot={false} isAnimationActive={true}
-              animationDuration={300} />
+              label={{
+                value: "Normal limit (0.5 m/s²)",
+                fontSize: 9,
+                fill: "#f97316",
+                position: "insideTopLeft",
+              }}
+            />
+            <Line
+              type="monotone"
+              dataKey="rms"
+              stroke={cfg.bar}
+              strokeWidth={2.5}
+              dot={false}
+              isAnimationActive={true}
+              animationDuration={300}
+            />
           </LineChart>
         </ResponsiveContainer>
 
@@ -303,7 +325,7 @@ export default function BridgeDetailClient({ bridge }: { bridge: Bridge }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="stat-cards-row grid grid-cols-3 gap-3">
         {[
           { label: "Current vibration",
             value: `${currentRms} m/s²`,

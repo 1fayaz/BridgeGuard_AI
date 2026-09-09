@@ -68,10 +68,10 @@ export default function BridgeMap() {
   const { MapContainer, TileLayer, CircleMarker, Popup } = mod;
 
   const coords: Record<string, [number, number]> = {
-    "bridge-indus-khi-hyd": [25.4358, 68.3792],
-    "bridge-kotri-01": [25.37, 68.31],
-    "bridge-sukkur-01": [27.7052, 68.8574],
-    "bridge-guddu-01": [28.45, 69.72],
+    "bridge-indus-hwy-01": [25.402444, 68.311417],
+    "bridge-kotri-01": [25.442389, 68.315556],
+    "bridge-sukkur-01": [27.679694, 68.845639],
+    "bridge-guddu-01": [28.419333, 69.712583],
   };
 
   const color: Record<string, string> = {
@@ -79,6 +79,13 @@ export default function BridgeMap() {
     WARNING: "#f97316",
     WATCH: "#eab308",
     SAFE: "#22c55e",
+  };
+
+  const popupNames: Record<string, string> = {
+    "bridge-indus-hwy-01": "Indus Highway Bridge (HYD-KHI)",
+    "bridge-kotri-01": "Kotri Barrage Bridge",
+    "bridge-sukkur-01": "Sukkur Barrage Bridge",
+    "bridge-guddu-01": "Guddu Barrage Bridge",
   };
 
   return (
@@ -91,8 +98,8 @@ export default function BridgeMap() {
       }}
     >
       <MapContainer
-        center={[26.5, 68.8]}
-        zoom={6}
+        center={[26.8, 68.6]}
+        zoom={7}
         style={{ height: "100%", width: "100%" }}
         scrollWheelZoom={false}
       >
@@ -114,7 +121,7 @@ export default function BridgeMap() {
               fillOpacity={0.9}
             >
               <Popup>
-                <strong>{b.name}</strong>
+                <strong>{popupNames[b.id]}</strong>
                 <br />
                 {b.location}
                 <br />
