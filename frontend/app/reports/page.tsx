@@ -486,10 +486,33 @@ export default function ReportsPage() {
       `);
       printWindow.document.close();
       printWindow.focus();
-      setTimeout(() => {
+
+      // Defense in depth: don't print on a blind timer alone. The logo is small now
+      // (~9KB), but printing before it finishes decoding would still ship a header
+      // with a missing image on a slow connection. Wait for its load/error event;
+      // fall back to a timer only as a safety net so a stuck event can never hang
+      // the print dialog forever.
+      const doPrint = () => {
         printWindow.print();
         printWindow.close();
-      }, 500);
+      };
+      const logoImg = printWindow.document.querySelector(
+        ".logo-block img",
+      ) as HTMLImageElement | null;
+      if (logoImg && !logoImg.complete) {
+        let settled = false;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          doPrint();
+        };
+        logoImg.addEventListener("load", finish, { once: true });
+        logoImg.addEventListener("error", finish, { once: true });
+        setTimeout(finish, 3000);
+      } else {
+        setTimeout(doPrint, 500);
+      }
+
       setLoading(false);
       setDone(true);
     }, 1000);

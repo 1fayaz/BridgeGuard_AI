@@ -56,8 +56,9 @@ export default function AgentsPage() {
         </h1>
         <p className="text-sm text-gray-500 mt-1">
           Every sensor reading passes through all 5 agents
-          in sequence. Built with OpenAI Agents SDK.
-          1,480+ tests. Zero failures.
+          in sequence. Built with deterministic Python agents.
+          2,184+ tests. Zero failures. OpenAI Agents SDK integration
+          planned for Agent 3 (Risk Reasoning).
         </p>
       </div>
 
