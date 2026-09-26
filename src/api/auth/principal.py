@@ -79,12 +79,18 @@ class AmbiguousTenantError(ApiError):
         super().__init__(Failure.INVALID_CREDENTIAL, detail)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class Principal:
     """One authenticated caller, pinned to exactly one municipality.
 
-    `slots=True` as well as `frozen=True`: frozen blocks reassignment, slots blocks
-    smuggling a second tenant on as a new attribute.
+    `frozen=True` alone blocks both reassigning an existing field and smuggling a
+    second tenant on as a new attribute — dataclasses raises `FrozenInstanceError`
+    for either. Deliberately NOT `slots=True` too: on CPython 3.12.x, combining
+    `slots=True` with `frozen=True` rebuilds the class to add `__slots__`, and the
+    generated `__setattr__`/`__delattr__` keep a stale closure over the pre-rebuild
+    class object — so `p.new_attr = x` raises `TypeError: super(type, obj): obj
+    must be an instance or subtype of type` instead of `FrozenInstanceError` (fixed
+    in 3.13, broken on 3.12 — which is what Vercel's Python runtime defaults to).
     """
 
     credential_class: CredentialClass

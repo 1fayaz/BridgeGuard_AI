@@ -1,8 +1,8 @@
 """Seed Sindh bridges, sensors, and a simulator device credential into Neon.
 
-The demo dashboard's four bridges (Sukkur / Guddu / Indus Highway / Kotri) live in the
-same municipality as the Lahore set, because the pool role (`neondb_owner`) bypasses RLS
-and `scope.py` hardcodes `municipality-lahore` for the demo GUC — the API's tenancy
+The demo dashboard's four bridges (Sukkur / Guddu / Indus Highway / Kotri) all live in the
+same municipality, because the pool role (`neondb_owner`) bypasses RLS
+and `scope.py` hardcodes `municipality-sindh` for the demo GUC — the API's tenancy
 boundary is therefore the one credential's `municipality_id`. A multi-tenant deployment
 needs the simulator's credential pinned to the tenant it serves, which is exactly what
 this script does.
@@ -30,8 +30,8 @@ BRIDGES = [
     ("bridge-kotri-01", "Kotri Barrage Bridge", "Kotri, Sindh"),
 ]
 
-MUNICIPALITY_ID = "municipality-lahore"
-MUNICIPALITY_NAME = "City of Lahore"
+MUNICIPALITY_ID = "municipality-sindh"
+MUNICIPALITY_NAME = "Sindh Province"
 
 
 def _hash_key(raw_key: str, salt: str) -> str:

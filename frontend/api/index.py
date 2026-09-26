@@ -30,7 +30,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, ConfigDict
 
-DEMO_MUNICIPALITY_ID = "municipality-lahore"
+DEMO_MUNICIPALITY_ID = "municipality-sindh"
 
 LIST_BRIDGES_SQL = """
 SELECT b.id AS bridge_id, b.name, b.location,
@@ -86,6 +86,9 @@ UPDATE device_credentials SET last_used_at = now() WHERE credential_id = $1
 """
 
 READINGS_WINDOW = 10
+# Matches src/api/ingest/batch.py's _DEFAULT_MAX_READINGS: an oversized batch must be
+# refused whole, before any reading is written, rather than silently truncated.
+MAX_INGEST_BATCH_SIZE = 1000
 SEVERITY_BANDS = ((81, "CRITICAL"), (61, "WARNING"), (31, "WATCH"))
 DEFAULT_SEVERITY = "SAFE"
 EXPLANATIONS = {
@@ -376,6 +379,15 @@ async def ingest(
         readings = payload.get("readings") or []
         if not isinstance(readings, list):
             raise HTTPException(status_code=422, detail="readings must be a list")
+        if len(readings) > MAX_INGEST_BATCH_SIZE:
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    f"This batch contains {len(readings)} readings; the limit is "
+                    f"{MAX_INGEST_BATCH_SIZE}. The batch was refused in full and no "
+                    "readings were stored — resend as smaller batches."
+                ),
+            )
 
         results: list[ReadingResult] = []
         accepted_count = 0

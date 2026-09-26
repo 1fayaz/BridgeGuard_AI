@@ -2,7 +2,7 @@
 
 **Feature:** `003-backend-api`
 **Created:** 2026-06-20
-**Status:** Draft — awaiting review before implementation
+**Status:** SUPERSEDED by `specs/api/` (2026-07-27) — retained for history only; not implemented under this feature number
 **Plan:** `specs/003-backend-api/plan.md`
 **Spec:** `specs/003-backend-api/spec.md`
 **Constitution:** v2.1.0

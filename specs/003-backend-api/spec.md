@@ -2,7 +2,7 @@
 
 **Feature Branch:** `003-backend-api`
 **Created:** 2026-06-20
-**Status:** Draft — awaiting clarifications
+**Status:** SUPERSEDED by `specs/api/` (2026-07-27) — retained for history only; not implemented under this feature number
 **Constitution:** v2.1.0 (`.specify/memory/constitution.md`)
 
 > **Provenance note (reconciled 2026-07-27):** This spec was written from the detailed

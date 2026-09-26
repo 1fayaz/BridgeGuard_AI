@@ -10,7 +10,7 @@ guarantees until a live instance exists.
 > schema exists. Never renumber a migration: tests reference migrations by filename, and applied
 > migrations are immutable history.
 
-## Apply order (0001–0017)
+## Apply order (0001–0019)
 
 | # | File | Creates / changes | Depends on |
 |---|------|-------------------|-----------|
@@ -32,6 +32,7 @@ guarantees until a live instance exists.
 | 0016 | `rls_policies` | Row-level security: `ENABLE` + `FORCE` (part A) and the per-table SELECT/INSERT policies keyed on `app.current_municipality_id` (part B). | 0015 |
 | 0017 | `device_credentials` | **(API layer)** Pi gateway credentials: hashed key → exactly one `bridge_id` + `municipality_id`. **Revoke-not-delete** (DELETE blocked); tenant guard trigger; RLS `ENABLE`+`FORCE` + SELECT/INSERT/UPDATE policies. | 0013, 0016 |
 | 0018 | `device_credential_key_immutable` | **(API layer)** Narrows 0017's permitted `UPDATE` to the lifecycle columns: `key_hash` / `credential_id` / `bridge_id` / `municipality_id` / `created_at` are immutable and revocation is one-way, so rotation must INSERT-then-revoke rather than overwrite a key in place. | 0017 |
+| 0019 | `rename_municipality_lahore_to_sindh` | **(data migration, no schema change)** Deletes 4 stray Punjab-named bridges/sensors left by the removed `scripts/seed_data.py` (confirmed zero references from any other table), then retargets the one live tenant from `municipality-lahore` to `municipality-sindh` across all eleven tenant-scoped tables. `device_credentials` is moved by delete-then-reinsert (not `UPDATE`) because 0018's guard trigger rejects a changed `municipality_id`. | 0013, 0015, 0017, 0018 |
 
 ## Additive strategy — why nothing was renumbered
 

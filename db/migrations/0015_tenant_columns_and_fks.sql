@@ -65,6 +65,17 @@ ALTER TABLE report_artifacts    ADD COLUMN IF NOT EXISTS municipality_id TEXT;
 
 ALTER TABLE alert_dispatches    ADD COLUMN IF NOT EXISTS municipality_id TEXT;
 
+-- --- sensors: ALREADY carries bridge_id (0014), so it gains ONLY municipality_id, same as the ---
+-- judgment tables above. CORRECTION (2026-09-25): originally omitted here on the theory that a
+-- sensor's tenant is always reachable by joining bridge_id -> bridges.municipality_id, so RLS on
+-- `sensors` would not need its own copy. 0016's sensors_select/sensors_insert policies were written
+-- against a denormalized municipality_id on this table regardless — a plain from-scratch replay of
+-- 0001-0019 (no prior manual patch) surfaces the mismatch immediately, since nothing else ever adds
+-- the column. Denormalizing it here, exactly like every other tenant-scoped table, is what 0016
+-- actually needs, and matches the read model's index-backed-equality RLS design (plan §2) instead
+-- of a special-cased join for this one table.
+ALTER TABLE sensors             ADD COLUMN IF NOT EXISTS municipality_id TEXT;
+
 -- ===========================================================================
 -- PART B (D302) — the HARD tenancy foreign keys + NOT NULL tightening.
 --
@@ -131,6 +142,11 @@ ALTER TABLE report_artifacts ALTER COLUMN municipality_id SET NOT NULL;
 ALTER TABLE alert_dispatches ADD CONSTRAINT fk_alert_bridge       FOREIGN KEY (bridge_id)       REFERENCES bridges(id);
 ALTER TABLE alert_dispatches ADD CONSTRAINT fk_alert_municipality FOREIGN KEY (municipality_id) REFERENCES municipalities(id);
 ALTER TABLE alert_dispatches ALTER COLUMN municipality_id SET NOT NULL;
+
+-- --- sensors: bridge_id's FK already exists (0014 declares it NOT NULL REFERENCES bridges(id)); ---
+-- only the new municipality_id FK + NOT NULL are added here.
+ALTER TABLE sensors ADD CONSTRAINT fk_sensors_municipality FOREIGN KEY (municipality_id) REFERENCES municipalities(id);
+ALTER TABLE sensors ALTER COLUMN municipality_id SET NOT NULL;
 
 -- ===========================================================================
 -- PART B (D303) — the denormalized-tenant CONSISTENCY GUARD.
@@ -220,7 +236,14 @@ CREATE TRIGGER trg_tenant_consistency
     BEFORE INSERT OR UPDATE ON decision_log
     FOR EACH ROW EXECUTE FUNCTION tenant_consistency_sensor_keyed();
 
--- Attach the bridge-keyed guard.
+-- Attach the bridge-keyed guard. sensors is bridge-keyed exactly like the judgment tables (it
+-- carries bridge_id directly, not sensor_id) so it reuses tenant_consistency_bridge_keyed(),
+-- not a new function.
+DROP TRIGGER IF EXISTS trg_tenant_consistency ON sensors;
+CREATE TRIGGER trg_tenant_consistency
+    BEFORE INSERT OR UPDATE ON sensors
+    FOR EACH ROW EXECUTE FUNCTION tenant_consistency_bridge_keyed();
+
 DROP TRIGGER IF EXISTS trg_tenant_consistency ON risk_assessments;
 CREATE TRIGGER trg_tenant_consistency
     BEFORE INSERT OR UPDATE ON risk_assessments
@@ -245,9 +268,10 @@ CREATE TRIGGER trg_tenant_consistency
 -- indexed equality, not a per-row join up the ownership chain. A B-tree on (municipality_id) makes
 -- that predicate index-backed instead of a sequential scan on every RLS-filtered query.
 --
--- Only the eight tables that GAINED municipality_id in part A are indexed here. bridges already
--- carries idx_bridges_municipality (0013); municipalities is filtered on its own PRIMARY KEY id;
--- sensors is bridge-keyed (reached via its bridge). Standard B-tree only — no TimescaleDB (v2.1.0).
+-- The nine tables that GAINED municipality_id in part A are indexed here (including sensors —
+-- see the Part A correction note). bridges already carries idx_bridges_municipality (0013);
+-- municipalities is filtered on its own PRIMARY KEY id. Standard B-tree only — no TimescaleDB
+-- (v2.1.0).
 -- ===========================================================================
 CREATE INDEX IF NOT EXISTS idx_raw_readings_municipality       ON raw_readings (municipality_id);
 CREATE INDEX IF NOT EXISTS idx_validated_readings_municipality ON validated_readings (municipality_id);
@@ -257,3 +281,4 @@ CREATE INDEX IF NOT EXISTS idx_decision_log_municipality       ON decision_log (
 CREATE INDEX IF NOT EXISTS idx_risk_assessments_municipality   ON risk_assessments (municipality_id);
 CREATE INDEX IF NOT EXISTS idx_report_artifacts_municipality   ON report_artifacts (municipality_id);
 CREATE INDEX IF NOT EXISTS idx_alert_dispatches_municipality   ON alert_dispatches (municipality_id);
+CREATE INDEX IF NOT EXISTS idx_sensors_municipality            ON sensors (municipality_id);

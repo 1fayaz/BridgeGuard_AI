@@ -208,6 +208,16 @@ export default function ReportsPage() {
               justify-content: space-between;
               align-items: center;
             }
+            .logo-block .brand-group {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+            }
+            .logo-block .brand-group img {
+              height: 40px;
+              width: 40px;
+              object-fit: contain;
+            }
             .logo-block .brand {
               font-size: 20px;
               font-weight: 800;
@@ -366,9 +376,12 @@ export default function ReportsPage() {
         <body>
 
           <div class="logo-block">
-            <div class="brand">
-              BridgeGuard AI
-              <small>AI-Powered Bridge Structural Health Monitoring</small>
+            <div class="brand-group">
+              <img src="${window.location.origin}/logo.png" alt="BridgeGuard AI" />
+              <div class="brand">
+                BridgeGuard AI
+                <small>AI-Powered Bridge Structural Health Monitoring</small>
+              </div>
             </div>
             <div class="meta">
               Report ID: <strong>${h(reportId)}</strong><br/>

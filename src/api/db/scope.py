@@ -43,7 +43,7 @@ GUC_NAME = "app.current_municipality_id"
 # `is_local => true` is the set_config equivalent of SET LOCAL.
 SET_SCOPE_SQL = f"SELECT set_config('{GUC_NAME}', $1, true)"
 
-DEMO_MUNICIPALITY_ID: Final = "municipality-lahore"
+DEMO_MUNICIPALITY_ID: Final = "municipality-sindh"
 
 _pool: asyncpg.Pool | None = None
 

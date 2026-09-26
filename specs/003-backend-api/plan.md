@@ -2,7 +2,7 @@
 
 **Feature:** `003-backend-api`
 **Created:** 2026-06-20
-**Status:** Draft — awaiting confirmation before task breakdown
+**Status:** SUPERSEDED by `specs/api/` (2026-07-27) — retained for history only; not implemented under this feature number
 **Spec:** `specs/003-backend-api/spec.md`
 **Constitution:** v2.1.0
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { LangProvider } from "@/lib/lang-context";
 import HeaderNav from "@/components/HeaderNav";
+import PageLoader from "@/components/PageLoader";
 
 export const metadata: Metadata = {
   title: "BridgeGuard AI — Bridge Health Monitoring",
@@ -26,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50/40 to-indigo-50/30 text-slate-900">
+        <PageLoader />
         <LangProvider>
           <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-900/90 backdrop-blur-md">
             <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">

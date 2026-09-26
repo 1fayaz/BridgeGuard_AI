@@ -48,24 +48,26 @@ binding on every spec, agent, and change.
 
 ---
 
-## Reconciliation (READ — two governing docs disagree)
+## Relationship to `.specify/memory/constitution.md`
 
-This file and `.specify/memory/constitution.md` (v1.0.0, ratified earlier this
-session) prescribe **different stacks**. Until a human resolves this, treat the
-conflict as open, not settled:
+Both documents prescribe the same stack. `constitution.md` (v2.1.0, last amended
+2026-07-04) reconciled its Principle VII to this file's stack back at v2.0.0 —
+OpenAI Agents SDK, n8n glue, MCP, Neon/Postgres with no TimescaleDB, TypeScript/
+Next.js, the `agents`-package alias-import resolution, and `needs_approval` gating
+are stated identically in both. There is no open stack conflict between the two
+docs. `constitution.md` is the fuller document — read it for Principles I–VI
+(safety, data integrity, modularity, reliability, testability, auditability), which
+this file does not restate; this file is Digital-FTE / agent-framework operating
+guidance layered on top.
 
-| Area | constitution.md v1.0.0 | this CLAUDE.md |
-|------|------------------------|----------------|
-| Agent reasoning | Claude API, used sparingly | **OpenAI Agents SDK** |
-| Backend | Flask / FastAPI | Python (Agents SDK) + **n8n** glue |
-| Datastore | PostgreSQL + **TimescaleDB** | **Neon**/Postgres (no TimescaleDB) |
-| Dashboard | React + Tailwind | **TypeScript / Next.js** |
-| Tool layer | (unspecified) | **MCP** |
+**What's still non-conformant is the built code, not the docs** (tracked in
+constitution.md's own v2.0.0 amendment note, re-verified 2026-09-25):
+- `src/api/` is FastAPI, not the OpenAI Agents SDK.
+- No agent — including `src/agents/data_collection/` — imports the OpenAI Agents
+  SDK anywhere in the repo; every agent is deterministic Python today.
+- `frontend/` **is** Next.js (`frontend/package.json` confirms `"next": "14.2.35"`).
+  This section previously said Vite + React here — that was migrated since and
+  this note had gone stale until now.
 
-The constitution's own governance says a stack change requires a recorded
-**amendment + version bump**, not a second doc. Already-built code also diverges:
-`frontend/` is **Vite + React** (not Next.js); `src/api/` is **FastAPI**; Agent 001
-is deterministic Python (no Agents SDK). **Decision needed:** amend the constitution
-to this stack (and migrate/justify the existing code), or keep the constitution's
-stack and treat this CLAUDE.md as agent-framework guidance only. Do not build new
-work on the new stack until this is resolved.
+None of this blocks new work — it's the backlog for eventually adopting the Agents
+SDK for agent reasoning, not a docs disagreement to resolve first.
