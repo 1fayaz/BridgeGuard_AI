@@ -1,0 +1,275 @@
+{
+  "recorded": false,
+  "generated_at": "2026-10-17T12:00:00Z",
+  "generated_by": "scripts/demo/generate_replay_fixtures.py --mode mock",
+  "contract_version": "round 4 (2026-10-17)",
+  "note": "MOCK fixtures. Slice 1's numbers (reading/limit/ratio/score/severity/explanation) are real, computed by the actual deterministic scorer. Pipeline-status timings and the approve response are hand-shaped contract filler because slices 2-4 are not built yet. Must stay recorded:false until --mode record replaces this with a real run.",
+  "bridge_id": "bridge-demo-01",
+  "cycle_id": "demo-mock-0001",
+  "is_demo": true,
+  "timeline": [
+    {
+      "at_ms": 0,
+      "endpoint": "POST /v1/demo/simulate-heavy-truck",
+      "response": {
+        "cycle_id": "demo-mock-0001",
+        "status": "accepted",
+        "is_demo": true
+      }
+    },
+    {
+      "at_ms": 600,
+      "endpoint": "GET /v1/bridges/{bridge_id}/pipeline-status",
+      "response": {
+        "bridge_id": "bridge-demo-01",
+        "cycle_id": "demo-mock-0001",
+        "is_demo": true,
+        "stages": {
+          "ingestion": {
+            "helper_name": "The Listener",
+            "plain_text": "Sensor heard it",
+            "done": true,
+            "completed_at": "2026-10-17T12:00:00.600000Z"
+          },
+          "signal": {
+            "helper_name": "The Analyst",
+            "plain_text": "Vibration checked",
+            "done": false,
+            "completed_at": null
+          },
+          "risk": {
+            "helper_name": "The Explainer",
+            "plain_text": "Risk scored",
+            "done": false,
+            "completed_at": null
+          },
+          "alert": {
+            "helper_name": "The Messenger",
+            "plain_text": "Alert prepared",
+            "done": false,
+            "completed_at": null,
+            "awaiting_engineer": false
+          },
+          "report": {
+            "helper_name": "The Writer",
+            "plain_text": "Report written",
+            "done": false,
+            "completed_at": null
+          }
+        }
+      }
+    },
+    {
+      "at_ms": 1600,
+      "endpoint": "GET /v1/bridges/{bridge_id}/pipeline-status",
+      "response": {
+        "bridge_id": "bridge-demo-01",
+        "cycle_id": "demo-mock-0001",
+        "is_demo": true,
+        "stages": {
+          "ingestion": {
+            "helper_name": "The Listener",
+            "plain_text": "Sensor heard it",
+            "done": true,
+            "completed_at": "2026-10-17T12:00:00.600000Z"
+          },
+          "signal": {
+            "helper_name": "The Analyst",
+            "plain_text": "Vibration checked",
+            "done": true,
+            "completed_at": "2026-10-17T12:00:01.600000Z"
+          },
+          "risk": {
+            "helper_name": "The Explainer",
+            "plain_text": "Risk scored",
+            "done": false,
+            "completed_at": null
+          },
+          "alert": {
+            "helper_name": "The Messenger",
+            "plain_text": "Alert prepared",
+            "done": false,
+            "completed_at": null,
+            "awaiting_engineer": false
+          },
+          "report": {
+            "helper_name": "The Writer",
+            "plain_text": "Report written",
+            "done": false,
+            "completed_at": null
+          }
+        }
+      }
+    },
+    {
+      "at_ms": 2600,
+      "endpoint": "GET /v1/bridges/{bridge_id}/pipeline-status",
+      "response": {
+        "bridge_id": "bridge-demo-01",
+        "cycle_id": "demo-mock-0001",
+        "is_demo": true,
+        "stages": {
+          "ingestion": {
+            "helper_name": "The Listener",
+            "plain_text": "Sensor heard it",
+            "done": true,
+            "completed_at": "2026-10-17T12:00:00.600000Z"
+          },
+          "signal": {
+            "helper_name": "The Analyst",
+            "plain_text": "Vibration checked",
+            "done": true,
+            "completed_at": "2026-10-17T12:00:01.600000Z"
+          },
+          "risk": {
+            "helper_name": "The Explainer",
+            "plain_text": "Risk scored",
+            "done": true,
+            "completed_at": "2026-10-17T12:00:02.600000Z"
+          },
+          "alert": {
+            "helper_name": "The Messenger",
+            "plain_text": "Alert prepared",
+            "done": false,
+            "completed_at": null,
+            "awaiting_engineer": false
+          },
+          "report": {
+            "helper_name": "The Writer",
+            "plain_text": "Report written",
+            "done": false,
+            "completed_at": null
+          }
+        }
+      }
+    },
+    {
+      "at_ms": 3600,
+      "endpoint": "GET /v1/bridges/{bridge_id}/pipeline-status",
+      "response": {
+        "bridge_id": "bridge-demo-01",
+        "cycle_id": "demo-mock-0001",
+        "is_demo": true,
+        "stages": {
+          "ingestion": {
+            "helper_name": "The Listener",
+            "plain_text": "Sensor heard it",
+            "done": true,
+            "completed_at": "2026-10-17T12:00:00.600000Z"
+          },
+          "signal": {
+            "helper_name": "The Analyst",
+            "plain_text": "Vibration checked",
+            "done": true,
+            "completed_at": "2026-10-17T12:00:01.600000Z"
+          },
+          "risk": {
+            "helper_name": "The Explainer",
+            "plain_text": "Risk scored",
+            "done": true,
+            "completed_at": "2026-10-17T12:00:02.600000Z"
+          },
+          "alert": {
+            "helper_name": "The Messenger",
+            "plain_text": "Alert prepared",
+            "done": true,
+            "completed_at": "2026-10-17T12:00:03.600000Z",
+            "awaiting_engineer": true
+          },
+          "report": {
+            "helper_name": "The Writer",
+            "plain_text": "Report written",
+            "done": false,
+            "completed_at": null
+          }
+        }
+      }
+    },
+    {
+      "at_ms": 4000,
+      "endpoint": "GET /v1/bridges/{bridge_id}/score-trace",
+      "response": {
+        "bridge_id": "bridge-demo-01",
+        "is_demo": true,
+        "assessment_id": 1,
+        "risk_score": 85,
+        "severity": "CRITICAL",
+        "review_status": "PENDING_HUMAN_REVIEW",
+        "bridge_status": "CRITICAL",
+        "sensor_offline_note": false,
+        "reading": {
+          "sensor_id": "sensor-demo-accel-01",
+          "value": 3.4,
+          "unit": "m/s^2",
+          "sensor_time": "2026-10-17T12:00:02Z"
+        },
+        "limit": {
+          "value": 1.0,
+          "ratio": 3.4,
+          "basis_label": "Demonstration limit, not a safety value",
+          "is_configured": true
+        },
+        "explanation": {
+          "text": "Template explanation: AI unavailable.",
+          "kind": "template_fallback",
+          "source_label": "Template explanation: AI unavailable."
+        }
+      }
+    },
+    {
+      "at_ms": 7000,
+      "endpoint": "POST /v1/alerts/{alert_dispatch_id}/approve",
+      "response": {
+        "alert_dispatch_id": "demo-alert-mock-0001",
+        "approval_state": "APPROVED",
+        "approved_by": "demo-engineer",
+        "approved_at": "2026-10-17T12:00:07Z",
+        "note": null,
+        "delivery_state": "QUEUED",
+        "notification_status": "not configured"
+      }
+    },
+    {
+      "at_ms": 7600,
+      "endpoint": "GET /v1/bridges/{bridge_id}/pipeline-status",
+      "response": {
+        "bridge_id": "bridge-demo-01",
+        "cycle_id": "demo-mock-0001",
+        "is_demo": true,
+        "stages": {
+          "ingestion": {
+            "helper_name": "The Listener",
+            "plain_text": "Sensor heard it",
+            "done": true,
+            "completed_at": "2026-10-17T12:00:00.600000Z"
+          },
+          "signal": {
+            "helper_name": "The Analyst",
+            "plain_text": "Vibration checked",
+            "done": true,
+            "completed_at": "2026-10-17T12:00:01.600000Z"
+          },
+          "risk": {
+            "helper_name": "The Explainer",
+            "plain_text": "Risk scored",
+            "done": true,
+            "completed_at": "2026-10-17T12:00:02.600000Z"
+          },
+          "alert": {
+            "helper_name": "The Messenger",
+            "plain_text": "Alert prepared",
+            "done": true,
+            "completed_at": "2026-10-17T12:00:03.600000Z",
+            "awaiting_engineer": false
+          },
+          "report": {
+            "helper_name": "The Writer",
+            "plain_text": "Report written",
+            "done": true,
+            "completed_at": "2026-10-17T12:00:07.600000Z"
+          }
+        }
+      }
+    }
+  ]
+}
