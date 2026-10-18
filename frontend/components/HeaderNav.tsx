@@ -1,35 +1,42 @@
 "use client";
-import { useLang } from "@/lib/lang-context";
 
-export default function HeaderNav() {
-  const { lang, t, toggleLang } = useLang();
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const ACTIVE = "text-navy shadow-[inset_0_-3px_0_#0081D3]";
+const INACTIVE = "text-navy-text hover:bg-page-bg";
+
+function NavLink({ href, children, exact }: { href: string; children: React.ReactNode; exact?: boolean }) {
+  const pathname = usePathname();
+  const active = exact ? pathname === href : pathname.startsWith(href);
   return (
-    <nav className="header-nav flex items-center gap-1 text-sm font-medium">
-      <a
-        href="/"
-        className="rounded-md px-4 py-2 text-slate-300 transition hover:bg-white/10 hover:text-white"
-      >
-        {t.overview}
-      </a>
-      <a
-        href="/agents"
-        className="rounded-md px-4 py-2 text-slate-300 transition hover:bg-white/10 hover:text-white"
-      >
-        {t.agents}
-      </a>
-      <a
-        href="/reports"
-        className="rounded-md px-4 py-2 text-slate-300 transition hover:bg-white/10 hover:text-white"
-      >
-        {t.reports}
-      </a>
-      <button
-        onClick={toggleLang}
-        className="ms-3 rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-200 transition hover:bg-white/10 hover:text-white"
-        aria-label={lang === "en" ? "Switch to Urdu" : "Switch to English"}
-      >
-        {lang === "en" ? "اردو" : "English"}
-      </button>
+    <Link
+      href={href}
+      className={`rounded-md px-4 py-4 text-[15px] font-semibold transition ${active ? ACTIVE : INACTIVE}`}
+    >
+      {children}
+    </Link>
+  );
+}
+
+/** Nav uses a fixed sample alert count badge sourced from lib/data.ts fixtures — real counts (once
+ * a live alerts endpoint exists) replace this value, not the badge's presence. */
+export default function HeaderNav({ alertCount }: { alertCount: number }) {
+  return (
+    <nav className="flex flex-wrap items-center gap-0.5 text-sm font-medium">
+      <NavLink href="/" exact>
+        Overview
+      </NavLink>
+      <NavLink href="/alerts">
+        Alerts
+        {alertCount > 0 && (
+          <span className="ms-2 rounded-full bg-urgent px-2 py-0.5 text-xs font-bold text-white">
+            {alertCount}
+          </span>
+        )}
+      </NavLink>
+      <NavLink href="/agents">AI Agents</NavLink>
+      <NavLink href="/reports">Reports</NavLink>
     </nav>
   );
 }

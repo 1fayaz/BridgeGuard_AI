@@ -54,10 +54,10 @@ export default function PageLoader() {
         }}
       >
         <Image
-          src="/logo.png"
+          src="/logo-icon.png"
           alt="BridgeGuard AI"
           width={160}
-          height={160}
+          height={120}
           priority
         />
       </div>
