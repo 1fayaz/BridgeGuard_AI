@@ -86,9 +86,11 @@ export default function DemoPage() {
     reset();
     setPhase("running");
     const sim = await liveApi.simulate();
-    if (isDemoStateNotFound(sim) || "__error" in sim) {
+    if ("__error" in sim) {
       setPhase("error");
-      setErrorMessage(isDemoStateNotFound(sim) ? "Press Simulate again." : sim.__error.detail);
+      const notFound = isDemoStateNotFound(sim);
+      const detail = sim.__error.detail;
+      setErrorMessage(notFound ? "Press Simulate again." : detail);
       return;
     }
     setCycleId(sim.cycle_id);
