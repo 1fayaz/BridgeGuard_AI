@@ -75,10 +75,11 @@ export default function BridgeMap() {
   };
 
   const color: Record<string, string> = {
-    CRITICAL: "#ef4444",
-    WARNING: "#f97316",
-    WATCH: "#eab308",
-    SAFE: "#22c55e",
+    CRITICAL: "#C62828",
+    WARNING: "#D45A00",
+    WATCH: "#E0A100",
+    SAFE: "#097F37",
+    UNKNOWN: "#6B7B8C",
   };
 
   const popupNames: Record<string, string> = {
