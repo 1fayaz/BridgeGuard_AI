@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BRIDGES, SEVERITY_CONFIG } from "@/lib/data";
 
-const severityRank = { CRITICAL: 0, WARNING: 1, WATCH: 2, SAFE: 3 };
+const severityRank = { CRITICAL: 0, WARNING: 1, WATCH: 2, SAFE: 3, UNKNOWN: 4 };
 
 export function generateStaticParams() {
   return BRIDGES.map((bridge) => ({ id: bridge.id }));
