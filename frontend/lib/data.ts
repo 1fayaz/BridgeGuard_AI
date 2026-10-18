@@ -1,5 +1,9 @@
-export type Severity = "SAFE" | "WATCH" | "WARNING" | "CRITICAL";
+export type Severity = "SAFE" | "WATCH" | "WARNING" | "CRITICAL" | "UNKNOWN";
 export type ReviewStatus = "FINAL" | "PENDING_HUMAN_REVIEW";
+
+/** Where a page's displayed numbers actually came from. Shown via <DataSourceBadge>; never
+ * implied silently — a reader must always be able to tell sample data from a live backend. */
+export type DataSource = "sample" | "live" | "live-unavailable";
 
 export interface Alert {
   id: string;
@@ -32,7 +36,12 @@ export interface Bridge {
 export const SEVERITY_CONFIG: Record<
   Severity,
   {
+    /** Plain-language label shown everywhere (design wording, not the raw severity name). */
     label: string;
+    /** Technical name, shown only where the underlying band matters (e.g. API debug views). */
+    technicalLabel: string;
+    oneLiner: string;
+    scoreRange: string;
     color: string;
     bg: string;
     text: string;
@@ -42,55 +51,91 @@ export const SEVERITY_CONFIG: Record<
     bar: string;
     bgHex: string;
     textHex: string;
+    /** Whether score text drawn on the shield badge needs dark or white ink (contrast). */
+    shieldTextDark: boolean;
   }
 > = {
   SAFE: {
     label: "Safe",
-    color: "bg-emerald-500",
-    bg: "bg-emerald-50/80",
-    text: "text-emerald-800",
-    border: "border-emerald-200",
-    ring: "ring-emerald-500/20",
+    technicalLabel: "SAFE",
+    oneLiner: "Nothing to do",
+    scoreRange: "0–30",
+    color: "bg-safe",
+    bg: "bg-safe-bg",
+    text: "text-safe-text",
+    border: "border-safe",
+    ring: "ring-safe/20",
     icon: "🟢",
-    bar: "#22c55e",
-    bgHex: "#ecfdf5",
-    textHex: "#065f46",
+    bar: "#097F37",
+    bgHex: "#E4F4EA",
+    textHex: "#0B5F2B",
+    shieldTextDark: false,
   },
   WATCH: {
-    label: "Watch",
-    color: "bg-amber-400",
-    bg: "bg-amber-50/80",
-    text: "text-amber-800",
-    border: "border-amber-200",
-    ring: "ring-amber-500/20",
+    label: "Keep an eye on",
+    technicalLabel: "WATCH",
+    oneLiner: "Watch for changes",
+    scoreRange: "31–60",
+    color: "bg-watch",
+    bg: "bg-watch-bg",
+    text: "text-watch-text",
+    border: "border-watch",
+    ring: "ring-watch/20",
     icon: "🟡",
-    bar: "#eab308",
-    bgHex: "#fffbeb",
-    textHex: "#92400e",
+    bar: "#E0A100",
+    bgHex: "#FFF3D2",
+    textHex: "#7A5200",
+    shieldTextDark: true,
   },
   WARNING: {
-    label: "Warning",
-    color: "bg-orange-500",
-    bg: "bg-orange-50/80",
-    text: "text-orange-800",
-    border: "border-orange-200",
-    ring: "ring-orange-500/20",
+    label: "Inspect soon",
+    technicalLabel: "WARNING",
+    oneLiner: "Plan a visit this week",
+    scoreRange: "61–80",
+    color: "bg-warn",
+    bg: "bg-warn-bg",
+    text: "text-warn-text",
+    border: "border-warn",
+    ring: "ring-warn/20",
     icon: "🟠",
-    bar: "#f97316",
-    bgHex: "#fff7ed",
-    textHex: "#9a3412",
+    bar: "#D45A00",
+    bgHex: "#FFE7D3",
+    textHex: "#9A4300",
+    shieldTextDark: false,
   },
   CRITICAL: {
-    label: "Critical",
-    color: "bg-rose-600",
-    bg: "bg-rose-50/80",
-    text: "text-rose-800",
-    border: "border-rose-200",
-    ring: "ring-rose-500/20",
+    label: "Urgent",
+    technicalLabel: "CRITICAL",
+    oneLiner: "Act as soon as possible",
+    scoreRange: "81–100",
+    color: "bg-urgent",
+    bg: "bg-urgent-bg",
+    text: "text-urgent-text",
+    border: "border-urgent",
+    ring: "ring-urgent/20",
     icon: "🔴",
-    bar: "#ef4444",
-    bgHex: "#fff1f2",
-    textHex: "#9f1239",
+    bar: "#C62828",
+    bgHex: "#FDE6E6",
+    textHex: "#A31F1F",
+    shieldTextDark: false,
+  },
+  // Never styled as safe (green) or omitted — an offline sensor or a missing verdict is its own,
+  // visibly-distinct grey state. See specs/005-demo-mode-and-approval/spec.md §4 FR-4.2.
+  UNKNOWN: {
+    label: "Unknown",
+    technicalLabel: "UNKNOWN",
+    oneLiner: "Sensor offline — status cannot be confirmed",
+    scoreRange: "—",
+    color: "bg-unknown",
+    bg: "bg-unknown-bg",
+    text: "text-unknown-text",
+    border: "border-unknown",
+    ring: "ring-unknown/20",
+    icon: "⚪",
+    bar: "#6B7B8C",
+    bgHex: "#EBEEF2",
+    textHex: "#3D4A59",
+    shieldTextDark: false,
   },
 };
 
@@ -314,6 +359,19 @@ export const BRIDGES: Bridge[] = [
     ],
   },
 ];
+
+// Exact plain-language card copy from the design files, keyed by bridge id. A bridge not listed
+// here (e.g. a future fixture) falls back to its severity band's generic one-liner — never blank.
+const PLAIN_ONE_LINER: Record<string, string> = {
+  "bridge-kotri-01": "Shaking is almost 10 times the safe limit. Send an engineer as soon as possible.",
+  "bridge-indus-hwy-01": "Shaking is about 5 times the safe limit. Plan an inspection this week.",
+  "bridge-guddu-01": "Slightly above the safe limit. Nothing to do yet. We are watching it closely.",
+  "bridge-sukkur-01": "Within the safe limit. No action needed.",
+};
+
+export function plainOneLiner(bridge: Bridge): string {
+  return PLAIN_ONE_LINER[bridge.id] ?? SEVERITY_CONFIG[bridge.severity].oneLiner;
+}
 
 export function generateReadings(severity: Severity) {
   const count = 50;
