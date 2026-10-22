@@ -5,7 +5,7 @@ import "./globals.css";
 import HeaderNav from "@/components/HeaderNav";
 import Footer from "@/components/Footer";
 import PageLoader from "@/components/PageLoader";
-import { BRIDGES } from "@/lib/data";
+import AlertStoreBoot from "@/components/AlertStoreBoot";
 
 export const metadata: Metadata = {
   title: "BridgeGuard AI — Bridge Health Monitoring",
@@ -27,8 +27,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const alertCount = BRIDGES.reduce((n, b) => n + b.alerts.length, 0);
-
   return (
     <html lang="en">
       <head>
@@ -39,44 +37,46 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-page-bg font-sans text-navy-deep antialiased">
-        <PageLoader />
+        <AlertStoreBoot>
+          <PageLoader />
 
-        {/* Permanent public-site ribbon — every page, always visible, never dismissible. */}
-        <div className="bg-navy-deep px-4 py-1.5 text-center text-[12px] font-semibold tracking-wide text-white">
-          Sample data, not real conditions.
-        </div>
-        <div
-          className="h-[5px]"
-          style={{ background: "linear-gradient(90deg, #00325D 0%, #0081D3 55%, #097F37 100%)" }}
-        />
-
-        <header className="sticky top-0 z-40 border-b border-border bg-white">
-          <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3.5 px-5 py-2.5 sm:px-10">
-            <Link href="/" className="flex items-center gap-2.5">
-              <Image src="/logo-icon.png" alt="" width={42} height={42} className="h-[42px] w-auto" priority />
-              <span className="font-display text-lg font-extrabold tracking-tight text-navy">
-                BridgeGuard <span className="text-safe">AI</span>
-              </span>
-            </Link>
-            <HeaderNav alertCount={alertCount} />
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-2 rounded-full bg-safe-bg px-3.5 py-1.5 text-[13px] font-semibold text-safe-text">
-                <span className="h-2 w-2 rounded-full bg-safe" />
-                Live
-              </span>
-              <Link
-                href="/demo"
-                className="rounded-xl bg-blue px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-bright"
-              >
-                Watch the demo
-              </Link>
-            </div>
+          {/* Permanent public-site ribbon — every page, always visible, never dismissible. */}
+          <div className="bg-navy-deep px-4 py-1.5 text-center text-[12px] font-semibold tracking-wide text-white">
+            Recorded measurements from published research, replayed. Not live readings from a bridge in Sindh.
           </div>
-        </header>
+          <div
+            className="h-[5px]"
+            style={{ background: "linear-gradient(90deg, #00325D 0%, #0081D3 55%, #097F37 100%)" }}
+          />
 
-        <main className="mx-auto max-w-[1200px] px-5 py-9 sm:px-10">{children}</main>
+          <header className="sticky top-0 z-40 border-b border-border bg-white">
+            <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3.5 px-5 py-2.5 sm:px-10">
+              <Link href="/" className="flex items-center gap-2.5">
+                <Image src="/logo-icon.png" alt="" width={42} height={42} className="h-[42px] w-auto" priority />
+                <span className="font-display text-lg font-extrabold tracking-tight text-navy">
+                  BridgeGuard <span className="text-safe">AI</span>
+                </span>
+              </Link>
+              <HeaderNav />
+              <div className="flex items-center gap-3">
+                <span className="inline-flex items-center gap-2 rounded-full bg-safe-bg px-3.5 py-1.5 text-[13px] font-semibold text-safe-text">
+                  <span className="h-2 w-2 rounded-full bg-safe" />
+                  Live
+                </span>
+                <Link
+                  href="/demo"
+                  className="rounded-xl bg-blue px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-bright"
+                >
+                  Watch the demo
+                </Link>
+              </div>
+            </div>
+          </header>
 
-        <Footer />
+          <main className="mx-auto max-w-[1200px] px-5 py-9 sm:px-10">{children}</main>
+
+          <Footer />
+        </AlertStoreBoot>
       </body>
     </html>
   );

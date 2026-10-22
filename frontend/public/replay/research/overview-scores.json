@@ -1,0 +1,26 @@
+{
+  "safe": {
+    "ratio_vs_reference": 1.0,
+    "risk_score": 0,
+    "severity": "SAFE",
+    "computed_with": "agents.risk_reasoning.scorer.normalise_ratio + .band.severity_for"
+  },
+  "little_moderate": {
+    "ratio_vs_reference": 2.4921337927532248,
+    "risk_score": 50,
+    "severity": "WATCH",
+    "computed_with": "agents.risk_reasoning.scorer.normalise_ratio + .band.severity_for"
+  },
+  "moderate": {
+    "ratio_vs_reference": 3.347078233122706,
+    "risk_score": 78,
+    "severity": "WARNING",
+    "computed_with": "agents.risk_reasoning.scorer.normalise_ratio + .band.severity_for"
+  },
+  "danger": {
+    "ratio_vs_reference": 5.787629029041844,
+    "risk_score": 100,
+    "severity": "CRITICAL",
+    "computed_with": "agents.risk_reasoning.scorer.normalise_ratio + .band.severity_for"
+  }
+}

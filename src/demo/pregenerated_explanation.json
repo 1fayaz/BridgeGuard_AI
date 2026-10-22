@@ -1,0 +1,7 @@
+{
+  "text": "The bridge's whole-bridge risk score is 85, placing it in the CRITICAL severity band. This critical rating is driven by a threshold factor value of 3.4, which significantly exceeds the established engineering limit of 1.0.",
+  "provider": "Google Gemini",
+  "model": "gemini-flash-lite-latest",
+  "generated_at": "2026-10-22T07:20:01.820225+00:00",
+  "guardrail_passed": true
+}

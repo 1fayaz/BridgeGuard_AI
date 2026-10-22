@@ -2,15 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import ShieldScore from "@/components/ShieldScore";
+import WatchDemo from "@/components/WatchDemo";
 import { SEVERITY_CONFIG, type Severity } from "@/lib/data";
 import {
   DEMO_BRIDGE_NAME,
   EXPLANATION_LABELS,
-  REPLAY_APPROVAL_DISCLAIMER,
   REPLAY_BANNER,
-  isDemoStateNotFound,
-  isLiveModeEnabled,
-  liveApi,
+  REPLAY_NOTHING_SAVED,
   loadReplayTimeline,
   type ApproveResponse,
   type PipelineStatusResponse,
@@ -18,7 +16,9 @@ import {
   type ScoreTraceResponse,
 } from "@/lib/demo-contract";
 
-type Mode = "live" | "replay";
+// LIVE mode is architecturally present in lib/demo-contract.ts (liveApi, isLiveModeEnabled) but
+// this build never calls it and exposes no UI path to reach it - the live API/approval backend
+// (slices 2-5, JWT auth) does not exist yet. Tonight's demo is REPLAY only.
 
 const EMPTY_STAGES: PipelineStatusResponse["stages"] = {
   ingestion: { helper_name: "The Listener", plain_text: "Sensor heard it", done: false, completed_at: null },
@@ -29,41 +29,32 @@ const EMPTY_STAGES: PipelineStatusResponse["stages"] = {
 };
 
 export default function DemoPage() {
-  const [mode] = useState<Mode>(() => (isLiveModeEnabled() ? "live" : "replay"));
-  const [phase, setPhase] = useState<"idle" | "running" | "error">("idle");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [cycleId, setCycleId] = useState<string | null>(null);
+  const [phase, setPhase] = useState<"idle" | "running">("idle");
   const [stages, setStages] = useState<PipelineStatusResponse["stages"]>(EMPTY_STAGES);
   const [scoreTrace, setScoreTrace] = useState<ScoreTraceResponse | null>(null);
   const [approveResult, setApproveResult] = useState<ApproveResponse | null>(null);
-  const [replayClickDisclaimer, setReplayClickDisclaimer] = useState(false);
+  const [showWatchDemo, setShowWatchDemo] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const approveEntry = useRef<ApproveResponse | null>(null);
 
   useEffect(() => {
     return () => {
       timers.current.forEach(clearTimeout);
-      if (pollRef.current) clearInterval(pollRef.current);
     };
   }, []);
 
-  function reset() {
+  function clearLocalState() {
     timers.current.forEach(clearTimeout);
     timers.current = [];
-    if (pollRef.current) clearInterval(pollRef.current);
+    approveEntry.current = null;
     setPhase("idle");
-    setErrorMessage(null);
-    setCycleId(null);
     setStages(EMPTY_STAGES);
     setScoreTrace(null);
     setApproveResult(null);
-    setReplayClickDisclaimer(false);
   }
 
   function applyEntry(entry: ReplayFile["timeline"][number]) {
-    if (entry.endpoint.includes("simulate-heavy-truck")) {
-      setCycleId((entry.response as { cycle_id: string }).cycle_id);
-    } else if (entry.endpoint.includes("pipeline-status")) {
+    if (entry.endpoint.includes("pipeline-status")) {
       setStages((entry.response as PipelineStatusResponse).stages);
     } else if (entry.endpoint.includes("score-trace")) {
       setScoreTrace(entry.response as ScoreTraceResponse);
@@ -73,102 +64,84 @@ export default function DemoPage() {
   }
 
   async function startReplay() {
-    reset();
+    clearLocalState();
     setPhase("running");
     const data = await loadReplayTimeline(); // the ONLY network call replay mode ever makes.
     for (const entry of data.timeline) {
+      if (entry.endpoint.includes("/approve")) {
+        // Held back for a real click (see decide()) instead of auto-applying on a timer - a
+        // replay still asks a person to press the button, it just never saves their answer.
+        approveEntry.current = entry.response as ApproveResponse;
+        continue;
+      }
       const t = setTimeout(() => applyEntry(entry), entry.at_ms);
       timers.current.push(t);
     }
   }
 
-  async function startLive() {
-    reset();
-    setPhase("running");
-    const sim = await liveApi.simulate();
-    if ("__error" in sim) {
-      setPhase("error");
-      const notFound = isDemoStateNotFound(sim);
-      const detail = sim.__error.detail;
-      setErrorMessage(notFound ? "Press Simulate again." : detail);
-      return;
-    }
-    setCycleId(sim.cycle_id);
-
-    pollRef.current = setInterval(async () => {
-      const status = await liveApi.pipelineStatus(DEMO_BRIDGE_ID, sim.cycle_id);
-      if ("__error" in status) return; // transient — keep polling.
-      setStages(status.stages);
-
-      if (status.stages.risk.done && !scoreTrace) {
-        const trace = await liveApi.scoreTrace(DEMO_BRIDGE_ID);
-        if (!("__error" in trace)) setScoreTrace(trace);
-      }
-      if (status.stages.report.done && pollRef.current) {
-        clearInterval(pollRef.current);
-      }
-    }, 1200);
+  // Replay has no backend state to clear - "Reset demo" only restarts local playback.
+  function handleResetClick() {
+    clearLocalState();
   }
 
-  async function decide(action: "approve" | "reject") {
-    if (mode === "replay") {
-      setReplayClickDisclaimer(true);
-      return; // click-through only — the recorded timeline, not the click, drives replay state.
-    }
-    const alertId = "demo-alert-1"; // the demo's one fixed dispatch id.
-    const result = action === "approve" ? await liveApi.approve(alertId) : await liveApi.reject(alertId);
-    if (isDemoStateNotFound(result)) {
-      setErrorMessage("Press Simulate again.");
-      return;
-    }
-    if (!("__error" in result)) setApproveResult(result);
+  // A real person's click on a replay: it reveals the same result the recorded run produced,
+  // right when clicked - but presses nothing backward into that recording. Nothing is saved.
+  function decide() {
+    if (approveEntry.current) setApproveResult(approveEntry.current);
   }
 
   const severity = (scoreTrace?.severity ?? null) as Severity | null;
   const cfg = severity ? SEVERITY_CONFIG[severity] : null;
   const allDone = Object.values(stages).every((s) => s.done);
-  // Show the alert card once Alert has prepared something — waiting for a decision, or already
-  // decided (permanent audit line). Only hide it before the Alert stage has run at all.
   const showAlertCard = stages.alert.done || approveResult !== null;
   const decided = approveResult !== null;
 
   return (
     <div className="flex flex-col gap-6">
-      {mode === "replay" && (
-        <div className="rounded-xl bg-watch-bg px-4 py-3 text-sm font-semibold text-watch-text">
-          {REPLAY_BANNER}
-        </div>
-      )}
+      <div className="rounded-xl bg-watch-bg px-4 py-3 text-sm font-semibold text-watch-text">
+        {REPLAY_BANNER}
+      </div>
 
       <div>
         <h1 className="font-display text-3xl font-extrabold text-navy">See it work: a heavy truck crosses {DEMO_BRIDGE_NAME}</h1>
         <p className="mt-2 max-w-2xl text-[16px] leading-relaxed text-navy-text">
-          {mode === "live"
-            ? "This runs the real pipeline on this laptop, right now."
-            : "This plays back a recorded run of the real pipeline, exactly as it happened."}
+          This plays back a recorded run of the real pipeline, exactly as it happened.
         </p>
       </div>
 
-      {phase === "error" && errorMessage && (
-        <div className="rounded-xl bg-urgent-bg px-4 py-3 text-sm font-semibold text-urgent-text">
-          {errorMessage}
-        </div>
-      )}
-
-      <div className="flex flex-wrap gap-3">
+      <div id="demo-start" className="flex flex-wrap gap-3 scroll-mt-24">
         <button
-          onClick={mode === "live" ? startLive : startReplay}
+          onClick={startReplay}
           disabled={phase === "running" && !allDone}
           className="rounded-xl bg-navy px-6 py-3.5 text-[15px] font-bold text-white disabled:opacity-60"
         >
-          {mode === "live" ? "Simulate a heavy truck" : "Watch the demo"}
+          Start the replay
         </button>
         {phase !== "idle" && (
-          <button onClick={reset} className="rounded-xl border-[1.5px] border-navy bg-white px-6 py-3.5 text-[15px] font-bold text-navy">
+          <button onClick={handleResetClick} className="rounded-xl border-[1.5px] border-navy bg-white px-6 py-3.5 text-[15px] font-bold text-navy">
             Reset demo
           </button>
         )}
+        <button
+          onClick={() => setShowWatchDemo(true)}
+          className="rounded-xl border-[1.5px] border-blue bg-white px-6 py-3.5 text-[15px] font-bold text-blue"
+        >
+          Watch the demo
+        </button>
       </div>
+
+      {showWatchDemo && (
+        <WatchDemo
+          onClose={() => setShowWatchDemo(false)}
+          onGoToApproval={() => {
+            setShowWatchDemo(false);
+            requestAnimationFrame(() => {
+              const target = document.getElementById("approval-panel") ?? document.getElementById("demo-start");
+              target?.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+          }}
+        />
+      )}
 
       {/* 5-step progress strip */}
       {phase !== "idle" && (
@@ -239,56 +212,74 @@ export default function DemoPage() {
         </section>
       )}
 
-      {/* Urgent alert card */}
+      {/* Urgent alert card - a real person's click on a replay. This is the page the "Watch the
+          demo" animation's closing hand-off card points to. */}
       {showAlertCard && (
-        <section className="rounded-2xl border-2 border-urgent bg-urgent-bg p-6">
+        <section id="approval-panel" className="scroll-mt-24 rounded-2xl border-2 border-urgent bg-urgent-bg p-6">
           <h2 className="font-display text-xl font-extrabold text-urgent-text">Urgent alert — human approval required</h2>
           <p className="mt-2 text-[15px] text-navy-text">
             {decided
               ? "AI suggests. A person decides."
-              : "Waiting for an engineer to decide. Nothing has been sent. AI suggests. A person decides."}
+              : "Waiting for an engineer to decide. AI suggests. A person decides."}
           </p>
 
           {!decided ? (
             <div className="mt-4 flex gap-3">
-              <button onClick={() => decide("approve")} className="rounded-xl bg-urgent px-6 py-3 text-sm font-bold text-white">
-                Approve and send
+              <button onClick={decide} className="rounded-xl bg-urgent px-6 py-3 text-sm font-bold text-white">
+                Approve (replay)
               </button>
-              <button onClick={() => decide("reject")} className="rounded-xl border-2 border-urgent bg-white px-6 py-3 text-sm font-bold text-urgent-text">
-                Reject / needs review
+              <button onClick={decide} className="rounded-xl border-2 border-urgent bg-white px-6 py-3 text-sm font-bold text-urgent-text">
+                Reject (replay)
               </button>
             </div>
           ) : (
-            <div className="mt-4 rounded-xl bg-white p-4 text-sm">
-              <strong>{approveResult!.approval_state === "APPROVED" ? "Approved" : "Rejected"}</strong> by{" "}
-              {approveResult!.approved_by} at {new Date(approveResult!.approved_at).toLocaleTimeString()}.
-              {approveResult!.notification_status && (
-                <span className="ml-1 text-navy-muted">Notification: {approveResult!.notification_status}.</span>
-              )}
-            </div>
-          )}
+            <div className="mt-4 flex flex-col gap-4 rounded-xl bg-white p-5 text-sm">
+              <div>
+                <div className="font-bold text-navy-muted">{REPLAY_NOTHING_SAVED}</div>
+                <div className="mt-1">
+                  <strong className="text-base">{approveResult!.approval_state === "APPROVED" ? "Approved" : "Rejected"}</strong> by{" "}
+                  {approveResult!.approved_by} at {new Date(approveResult!.approved_at).toLocaleTimeString()} in this recorded run.
+                </div>
+                <div className="mt-1 text-navy-muted">In the live system this will be logged.</div>
+              </div>
 
-          {mode === "replay" && replayClickDisclaimer && !decided && (
-            <p className="mt-3 text-sm font-semibold text-navy-muted">{REPLAY_APPROVAL_DISCLAIMER}</p>
+              {scoreTrace && cfg && (
+                <>
+                  <div className="flex items-center gap-3 border-t border-border pt-4">
+                    <ShieldScore severity={severity!} score={scoreTrace.risk_score} size={48} />
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-wide text-navy-muted">Final risk level</div>
+                      <div className="font-display text-lg font-extrabold text-navy">
+                        {scoreTrace.risk_score}/100 · {cfg.label}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="rounded-lg border-l-4 border-blue bg-page-bg p-4 leading-relaxed">
+                    <div className="mb-1.5 text-xs font-bold uppercase tracking-wide text-navy-muted">
+                      {scoreTrace.explanation.source_label ?? EXPLANATION_LABELS[scoreTrace.explanation.kind]}
+                    </div>
+                    &ldquo;{scoreTrace.explanation.text}&rdquo;
+                  </div>
+                </>
+              )}
+
+              <a href="/replay/demo-report.pdf" className="font-bold text-blue">
+                Open the demonstration report (PDF) →
+              </a>
+            </div>
           )}
         </section>
       )}
 
       {/* Share a report */}
       {stages.report.done && (
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section id="report" className="scroll-mt-24 rounded-2xl bg-white p-6 shadow-sm">
           <h2 className="font-display text-lg font-bold text-navy">Share a report</h2>
-          {mode === "replay" ? (
-            <a href="/replay/demo-report.pdf" className="mt-3 inline-block rounded-xl bg-navy px-6 py-3 text-sm font-bold text-white">
-              Open the demonstration report (PDF)
-            </a>
-          ) : (
-            <p className="mt-2 text-sm text-navy-text">Report ready — generated by the real renderer, marked DEMONSTRATION DATA.</p>
-          )}
+          <a href="/replay/demo-report.pdf" className="mt-3 inline-block rounded-xl bg-navy px-6 py-3 text-sm font-bold text-white">
+            Open the demonstration report (PDF)
+          </a>
         </section>
       )}
     </div>
   );
 }
-
-const DEMO_BRIDGE_ID = "bridge-demo-01";

@@ -10,6 +10,10 @@ export interface StageStatus {
   done: boolean;
   completed_at: string | null;
   awaiting_engineer?: boolean;
+  // TODO(contract): not yet in the frozen contract. Backend session is adding this to the alert
+  // stage (and echoing it on ScoreTraceResponse below) so live mode has a real id to call
+  // approve/reject with. Optional + undefined-safe until announced — see demo/page.tsx's guard.
+  alert_dispatch_id?: string;
 }
 
 export interface PipelineStatusResponse {
@@ -37,6 +41,8 @@ export interface ScoreTraceResponse {
   reading: { sensor_id: string; value: number; unit: string; sensor_time: string };
   limit: { value: number | null; ratio: number | null; basis_label: string; is_configured: boolean };
   explanation: { text: string; kind: ExplanationKind; source_label: string };
+  // TODO(contract): same gap as StageStatus.alert_dispatch_id above - not yet announced.
+  alert_dispatch_id?: string;
 }
 
 export interface ApproveResponse {
@@ -95,8 +101,12 @@ export async function loadReplayTimeline(
 }
 
 // --- LIVE mode: real backend calls. Never invoked unless NEXT_PUBLIC_DEMO_MODE_ENABLED === "true". ---
+// Deliberately a SEPARATE token from lib/api.ts's NEXT_PUBLIC_DEMO_TOKEN (used for the existing
+// real-bridge ingest/read calls, unchanged). This one is an ENGINEER_JWT scoped to
+// municipality-demo, read only from a local, git-ignored .env.local on the presenter's laptop -
+// never set on the public deployment. Minting mechanism: backend session to confirm.
 const liveBase = () => process.env.NEXT_PUBLIC_API_URL || "";
-const liveToken = () => process.env.NEXT_PUBLIC_DEMO_TOKEN || "";
+const liveToken = () => process.env.NEXT_PUBLIC_DEMO_ENGINEER_JWT || "";
 
 async function liveFetch<T>(path: string, init?: RequestInit): Promise<T | { __error: ErrorResponse }> {
   const res = await fetch(`${liveBase()}${path}`, {
@@ -146,4 +156,6 @@ export function isLiveModeEnabled(): boolean {
 
 export const DEMO_BRIDGE_NAME = "Demonstration Bridge";
 export const REPLAY_BANNER = "Replay of a recorded demonstration run. Demonstration data.";
-export const REPLAY_APPROVAL_DISCLAIMER = "Replay: no real approval is recorded.";
+// Never "recorded"/"saved"/"logged" anywhere a replay click is involved - this build has no
+// live API and no approval audit log (see app/demo/page.tsx's top-of-file note).
+export const REPLAY_NOTHING_SAVED = "Replay: nothing is saved.";

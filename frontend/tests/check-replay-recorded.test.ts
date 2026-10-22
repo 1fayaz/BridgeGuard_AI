@@ -11,18 +11,49 @@ function tmpFixture(content: unknown): string {
   return file;
 }
 
-test("recorded:false fails the build check", () => {
+function tmpLayout(withRibbon: boolean): string {
+  const file = path.join(os.tmpdir(), `layout-${Date.now()}-${Math.random()}.tsx`);
+  fs.writeFileSync(
+    file,
+    withRibbon ? "<div>Not live readings from a bridge in Sindh.</div>" : "<div>nothing here</div>",
+  );
+  return file;
+}
+
+test("recorded:false with no honest note fails the build check", () => {
   const file = tmpFixture({ recorded: false });
-  const result = checkReplayRecorded(file);
+  const layout = tmpLayout(true);
+  const result = checkReplayRecorded(file, layout);
   assert.equal(result.ok, false);
   fs.unlinkSync(file);
+  fs.unlinkSync(layout);
 });
 
-test("recorded:true passes the build check", () => {
-  const file = tmpFixture({ recorded: true });
-  const result = checkReplayRecorded(file);
+test("recorded:false with an honest mock note AND the ribbon present passes", () => {
+  const file = tmpFixture({ recorded: false, note: "MOCK fixtures, not a real run." });
+  const layout = tmpLayout(true);
+  const result = checkReplayRecorded(file, layout);
   assert.equal(result.ok, true);
   fs.unlinkSync(file);
+  fs.unlinkSync(layout);
+});
+
+test("recorded:false with an honest note but the ribbon missing still fails", () => {
+  const file = tmpFixture({ recorded: false, note: "MOCK fixtures, not a real run." });
+  const layout = tmpLayout(false);
+  const result = checkReplayRecorded(file, layout);
+  assert.equal(result.ok, false);
+  fs.unlinkSync(file);
+  fs.unlinkSync(layout);
+});
+
+test("recorded:true passes the build check regardless of the note or ribbon", () => {
+  const file = tmpFixture({ recorded: true });
+  const layout = tmpLayout(false);
+  const result = checkReplayRecorded(file, layout);
+  assert.equal(result.ok, true);
+  fs.unlinkSync(file);
+  fs.unlinkSync(layout);
 });
 
 test("a missing fixture file fails the build check", () => {

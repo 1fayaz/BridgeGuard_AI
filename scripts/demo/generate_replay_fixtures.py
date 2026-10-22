@@ -27,6 +27,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
+from demo.explanation import LABELS  # noqa: E402
 from demo.pipeline import run_slice1  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -136,7 +137,7 @@ def build_mock_timeline() -> dict[str, Any]:
                 "explanation": {
                     "text": a.explanation,
                     "kind": result.explanation_kind.value,
-                    "source_label": a.explanation,
+                    "source_label": LABELS[result.explanation_kind],
                 },
             },
         },

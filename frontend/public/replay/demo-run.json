@@ -210,9 +210,9 @@
           "is_configured": true
         },
         "explanation": {
-          "text": "Template explanation: AI unavailable.",
-          "kind": "template_fallback",
-          "source_label": "Template explanation: AI unavailable."
+          "text": "The bridge's whole-bridge risk score is 85, placing it in the CRITICAL severity band. This critical rating is driven by a threshold factor value of 3.4, which significantly exceeds the established engineering limit of 1.0.",
+          "kind": "pregenerated_ai",
+          "source_label": "AI-written explanation, generated in advance for this scenario."
         }
       }
     },

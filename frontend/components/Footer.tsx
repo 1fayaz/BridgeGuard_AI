@@ -21,6 +21,7 @@ export default function Footer() {
           <Link href="/alerts">Alerts</Link>
           <Link href="/agents">AI Agents</Link>
           <Link href="/reports">Reports</Link>
+          <Link href="/connect">Connect</Link>
         </nav>
       </div>
       <div className="bg-page-bg px-5 py-3.5 text-center text-[13px] text-navy-muted sm:px-10">

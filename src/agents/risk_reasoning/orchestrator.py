@@ -63,8 +63,18 @@ def assess_bridge(
     trace_id: str,
     baseline_window: str = "30d",
     guardrail_tolerance: float = DEFAULT_GUARDRAIL_TOLERANCE,
+    on_model_failure: Callable[[Exception], str] | None = None,
 ) -> RiskAssessment:
-    """Assess one bridge at one cycle (FR-3a). Always returns a RiskAssessment; never raises."""
+    """Assess one bridge at one cycle (FR-3a). Always returns a RiskAssessment; never raises.
+
+    `on_model_failure` is additive and defaults to `None`, which preserves this function's exact
+    existing behaviour: any failure (including the model-draft call) is isolated into a withheld,
+    PENDING_HUMAN_REVIEW assessment. It exists only for the demo pipeline
+    (`specs/005-demo-mode-and-approval`), which cannot let a flaky model call blank out an
+    already-computed, deterministic score on stage — when supplied, a model-draft failure
+    SPECIFICALLY (not a coverage/scoring failure) keeps the real score/band and uses this hook's
+    return value as the explanation instead of withholding. No real call site passes this.
+    """
     try:
         return _assess(
             bridge_id=bridge_id, cycle_id=cycle_id, store=store, bridge_type=bridge_type,
@@ -72,6 +82,7 @@ def assess_bridge(
             factor_extractor=factor_extractor, expected_calc_count=expected_calc_count,
             model_id=model_id, model_version=model_version, trace_id=trace_id,
             baseline_window=baseline_window, guardrail_tolerance=guardrail_tolerance,
+            on_model_failure=on_model_failure,
         )
     except Exception as exc:  # FR-8: no failure escapes as a crash — withhold and route to review.
         return _withheld(
@@ -86,7 +97,7 @@ def assess_bridge(
 def _assess(
     *, bridge_id, cycle_id, store, bridge_type, score_config, coverage_config, model,
     factor_extractor, expected_calc_count, model_id, model_version, trace_id,
-    baseline_window, guardrail_tolerance,
+    baseline_window, guardrail_tolerance, on_model_failure=None,
 ) -> RiskAssessment:
     # 1. Three read-only fetches.
     calc = get_calculation_results(bridge_id, cycle_id, store)
@@ -133,7 +144,28 @@ def _assess(
         "factors": scored.factors, "standard": standard,
         "caveats": collect_caveats(ran),  # AC-8: SA data-quality flags reach the reasoning
     }
-    loop = run_guardrail_loop(lambda attempt: model.draft(attempt, context), legitimate)
+    try:
+        loop = run_guardrail_loop(lambda attempt: model.draft(attempt, context), legitimate)
+    except Exception as exc:
+        if on_model_failure is None:
+            raise  # unchanged existing behaviour: propagates to assess_bridge's outer withhold.
+        # Demo-only path: keep the real, already-computed score/band; substitute the hook's
+        # (honestly labelled, non-AI) text for the explanation instead of withholding the score.
+        review = apply_review_status(band.severity, is_withheld=False)
+        return RiskAssessment(
+            bridge_id=bridge_id, cycle_id=cycle_id,
+            risk_score=scored.score, severity=band.severity,
+            recommendation=_recommendation_for(band.severity),
+            explanation=on_model_failure(exc),
+            contributing_factors=scored.factors,
+            confidence=completeness, data_completeness=completeness,
+            review_status=review,
+            source_analysis_ids=source_ids,
+            baseline_ref=(f"{bridge_id}:{baseline_window}" if _baseline.has_baseline else None),
+            standard_code=standard.standard_code, standard_version=standard.standard_version,
+            score_weights_version=score_config.score_weights_version,
+            model_id=model_id, model_version=model_version, trace_id=trace_id,
+        )
 
     if loop.failed_closed:
         offending = ", ".join(tok.raw for tok in loop.offending)
